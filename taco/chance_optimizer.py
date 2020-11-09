@@ -1,4 +1,9 @@
+"""
+.. module:: chance_optimizer
+   :synopsis: Module which encapsulates the optimization procedure
 
+.. moduleauthor:: Yassine LAGUEL <first-name DOT last-name AT univ-grenoble-alpes DOT fr>
+"""
 
 from .oracle import Oracle, FastOracle
 from .algorithms.bundle import BundleAlgorithm
@@ -7,20 +12,45 @@ import os
 
 
 class Optimizer:
+    """ Base class for optimization of chance constrained problems
+
+        For an problem instance providing a dataset and two first order oracles :math:`f` and :math:`g`, this class
+        is an interface for solving the minimization problem
+        .. math::
+            \min_{x \in \mathbb{R}^d f(x) \text{ s.t. } \mathbb{P}[g(x,\xi) \leq 0] \geq p
+
+    """
 
     def __init__(self, problem, params=None, performance_warning=False):
+        """
+        :type problem: Problem
+        :param problem: An instance of Problem
+
+        :type params: dict
+        :param params: A dictionnary of parameters for the optimization process
+
+        :type performance_warning: bool
+        :param performance_warning: If True, prints numba performance warnings.
+        """
 
         if not performance_warning:
             os.environ['NUMBA_DISABLE_PERFORMANCE_WARNINGS'] = str(1)
 
         self.params = self._treat_params(params)
         self.problem = problem
-        self.oracle = self.instantiate_oracle()
-        self.algorithm = self.instantiate_algorithm()
+        self.oracle = self._instantiate_oracle()
+        self.algorithm = self._instantiate_algorithm()
         self.solution = None
 
-    def run(self, verbose_mode=False):
-        self.solution = self.algorithm.run(verbose_mode=verbose_mode)
+    def run(self, verbose=False):
+        """
+            Runs the selected algorithm to solve the chance constrained problem.
+
+        :type verbose: bool
+        :param verbose: If true, prints advance of the process in the console
+        :return: solution of the problem
+        """
+        self.solution = self.algorithm.run(verbose=verbose)
         return self.solution
 
     @staticmethod
@@ -58,7 +88,7 @@ class Optimizer:
             res = params
         return res
 
-    def instantiate_oracle(self):
+    def _instantiate_oracle(self):
         p = self.params['p']
         pen1 = self.params['pen1']
         pen2 = self.params['pen2']
@@ -68,6 +98,6 @@ class Optimizer:
             return FastOracle(self.problem, p, pen1, pen2, rho)
         return Oracle(self.problem, p, pen1, pen2, rho)
 
-    def instantiate_algorithm(self):
+    def _instantiate_algorithm(self):
 
         return BundleAlgorithm(self.oracle, params=self.params)

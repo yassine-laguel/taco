@@ -2,3 +2,4 @@ demo.ipynb
 .ipynb_checkpoints/
 ./taco/DS_Store/
 ./taco/__pycache__/
+.idea/

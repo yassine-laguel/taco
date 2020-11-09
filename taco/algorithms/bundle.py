@@ -13,19 +13,20 @@ from numba import njit
 
 
 class BundleAlgorithm:
-    """Base class that instantiates that combines a penalization procedure with the  Bundle Method [1] to solve
-    the chance constraint problem.
+    """ Base class that combines a penalization procedure with the Bundle Method [1] to solve
+        the chance constraint problem. It is instantiated with a first-oder oracle for the DC objective and a
+        dictionnary of parameters, this class is aimed at running a bundle method to minimize the DC objective.
+        From time to time, the penalization parameters are increased to escape some critical point of the DC
+        objective.
 
-                            Instantiated with a first-oder oracle for the DC objective and a dictionnary of parameters,
-                            this class is aimed at running a bundle method to minimize the DC objective. From time to
-                            time, the penalization parameters are increased to escape some critical point of the DC
-                            objective.
-                            :param oracle: An oracle object.
-                            :param params: Python dictionary of parameters.
     """
 
     def __init__(self, oracle, params):
+        """
 
+        :param oracle: An oracle object.
+        :param params: Python dictionary of parameters.
+        """
         # First order Oracle for the DC problem
         self.oracle = oracle
 
@@ -71,21 +72,27 @@ class BundleAlgorithm:
         self.restarting_factor_pen = params['bund_restarting_factor_pen']
 
         # Logging Tools
-        self.verbose_mode = None
+        self.verbose = None
         self.logging_dictionary = {}
         self.lst_iterates = np.zeros((self.nb_iterations, len(self.x)), dtype=np.float64)
         self.lst_times = np.zeros(self.nb_iterations, dtype=np.float64)
         self.lst_values = np.zeros(self.nb_iterations, dtype=np.float64)
         self.lst_serious_steps = np.zeros(self.nb_iterations, dtype=np.float64)
 
-    def run(self, verbose_mode=False):
+    def run(self, verbose=False):
+        """
+            Runs the optimization process
+        :type verbose: bool
+        :param verbose: If true, prints advance of the process in the console
+        :return: solution of the problem
+        """
 
         start_time = time.time()
-        self.verbose_mode = verbose_mode
+        self.verbose = verbose
 
         while self.counter < self.nb_iterations:
 
-            if verbose_mode:
+            if verbose:
                 self.lst_times[self.counter] = time.time() - start_time
                 self.lst_iterates[self.counter] = self.stability_center
                 self.lst_values[self.counter] = self.f_stability
@@ -97,7 +104,7 @@ class BundleAlgorithm:
             new_x = self._solve_sub_problem()
 
             if np.linalg.norm(new_x - self.stability_center) <= self.delta_tol:
-                if verbose_mode:
+                if verbose:
                     print("Solution Found in " + str(self.counter) + " iterations.")
                 return self.stability_center
             else:

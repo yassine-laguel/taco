@@ -16,19 +16,30 @@ from numba import njit
 class Oracle:
     r"""Base class that instantiates a first-order oracle for the DC objective of the penalized chance constaint
 
-                        For two input oracles :math:`f` and :math:`g` given through their function and gradients, and a
-                        sampled dataset from a random variable :math:'\xi', this class is an interface to compute the value
-                        and the gradient of the function :math:`x, \eta mapsto \mapsto f(x) + \mu \max(\eta,0) + \lambda (G(x,\eta) - \bar Q_p(g(x,\xi))`
-                        where :math:`G(x, \eta) = \eta + \frac{1}{1-p} \mathbb{E}[\max(g(x, \xi) - \eta]`
-                        :param objective_func: function associated to the objective.
-                        :param objective_grad: gradient associated to the objective.
-                        :param constraint_func: function associated to the constraint.
-                        :param constraint_grad: gradient associated to the constraint.
-                        :param `numpy.ndarray`` data: matrix whose lines are realizations of the random variable :math:`\xi`.
-                        :param params: Python dictionary of parameters.
-            """
+        For two input oracles :math:`f` and :math:`g` given through their function and gradients, and a
+        sampled dataset from a random variable :math:'\xi', this class is an interface to compute the value
+        and the gradient of the function
+        :math:`x, \eta mapsto \mapsto f(x) + \mu \max(\eta,0) + \lambda (G(x,\eta) - \bar Q_p(g(x,\xi))`
+        where :math:`G(x, \eta) = \eta + \frac{1}{1-p} \mathbb{E}[\max(g(x, \xi) - \eta]`
+    """
 
     def __init__(self, problem, p, pen1, pen2, rho):
+        """
+
+        :param problem: Instance of Problem
+
+        :type p : np.float64
+        :param p: Real number in [0,1]. Safety probability level
+
+        :type pen1 : np.float64
+        :param pen1: Penalization parameter > 0
+
+        :type pen2 : np.float64
+        :param pen2: Penalization parameter > 0
+
+        :type rho : np.float64
+        :param rho: Smoothing parameter for the superquantile
+        """
 
         self.problem = problem
 
@@ -301,20 +312,25 @@ spec = [
 class FastOracle:
     r"""Base class that instantiates a first-order oracle for the DC objective of the penalized chance constaint
 
-                        For two input oracles :math:`f` and :math:`g` given through their function and gradients, and a
-                        sampled dataset from a random variable :math:'\xi', this class is an interface to compute the value
-                        and the gradient of the function :math:`x, \eta mapsto \mapsto f(x) + \mu \max(\eta,0) + \lambda (G(x,\eta) - \bar Q_p(g(x,\xi))`
-                        where :math:`G(x, \eta) = \eta + \frac{1}{1-p} \mathbb{E}[\max(g(x, \xi) - \eta]`
-                        :param objective_func: function associated to the objective.
-                        :param objective_grad: gradient associated to the objective.
-                        :param constraint_func: function associated to the constraint.
-                        :param constraint_grad: gradient associated to the constraint.
-                        :param `numpy.ndarray`` data: matrix whose lines are realizations of the random variable :math:`\xi`.
-                        :param params: Python dictionary of parameters.
-            """
+    """
 
     def __init__(self, problem, p, pen1, pen2, rho):
+        """
 
+                :param problem: Instance of Problem
+
+                :type p : np.float64
+                :param p: Real number in [0,1]. Safety probability level
+
+                :type pen1 : np.float64
+                :param pen1: Penalization parameter > 0
+
+                :type pen2 : np.float64
+                :param pen2: Penalization parameter > 0
+
+                :type rho : np.float64
+                :param rho: Smoothing parameter for the superquantile
+                """
         self.problem = problem
 
         self.p = p
