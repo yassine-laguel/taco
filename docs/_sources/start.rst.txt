@@ -56,7 +56,7 @@ A number of parameters can then be provided to instanciate the class ``Optimizer
                 'bund_mu_low' : 0.001  # lower bound for the proximal parameter of the bundle
 
                 'bund_max_size_bundle_set': 30,  # Maximum size for the smoothing constant
-                'superquantile_smoothing_param' : 0.1,  # smoothing constant                                      \
+                'superquantile_smoothing_param' : 0.1,  # smoothing constant
             }
 
     safety_proba_threshold =  0.03368421
