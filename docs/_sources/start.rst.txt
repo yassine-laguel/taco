@@ -51,7 +51,7 @@ A number of parameters can then be provided to instanciate the class ``Optimizer
 
     from taco import Optimizer
 
-    other_params = {
+    other_selected_params = {
                 'bund_mu_high' : 0.001  # upper bound for the proximal parameter of the bundle
                 'bund_mu_low' : 0.001  # lower bound for the proximal parameter of the bundle
 
@@ -62,7 +62,7 @@ A number of parameters can then be provided to instanciate the class ``Optimizer
     safety_proba_threshold =  0.03368421
     pb_numba_compliant = True  # Set to true if the input problem is a jitclass.
 
-    optimizer = Optimizer(problem, p=0.03368421, numba=pb_numba_compliant, params=params)
+    optimizer = Optimizer(problem, p=0.03368421, numba=pb_numba_compliant, params=other_selected_params)
 
 The user can then run the bundle method and retrieve the solution found.
 

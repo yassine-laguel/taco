@@ -206,7 +206,7 @@ $ source activate taco_env
 <p>A number of parameters can then be provided to instanciate the class <code class="docutils literal notranslate"><span class="pre">Optimizer</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">taco</span> <span class="kn">import</span> <span class="n">Optimizer</span>
 
-<span class="n">other_params</span> <span class="o">=</span> <span class="p">{</span>
+<span class="n">other_selected_params</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;bund_mu_high&#39;</span> <span class="p">:</span> <span class="mf">0.001</span>  <span class="c1"># upper bound for the proximal parameter of the bundle</span>
             <span class="s1">&#39;bund_mu_low&#39;</span> <span class="p">:</span> <span class="mf">0.001</span>  <span class="c1"># lower bound for the proximal parameter of the bundle</span>
 
@@ -217,7 +217,7 @@ $ source activate taco_env
 <span class="n">safety_proba_threshold</span> <span class="o">=</span>  <span class="mf">0.03368421</span>
 <span class="n">pb_numba_compliant</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Set to true if the input problem is a jitclass.</span>
 
-<span class="n">optimizer</span> <span class="o">=</span> <span class="n">Optimizer</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.03368421</span><span class="p">,</span> <span class="n">numba</span><span class="o">=</span><span class="n">pb_numba_compliant</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+<span class="n">optimizer</span> <span class="o">=</span> <span class="n">Optimizer</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.03368421</span><span class="p">,</span> <span class="n">numba</span><span class="o">=</span><span class="n">pb_numba_compliant</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">other_selected_params</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The user can then run the bundle method and retrieve the solution found.</p>
