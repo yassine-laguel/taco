@@ -1,0 +1,39 @@
+Problem Instances
+=================
+
+
+Standard Implementation
+-----------------------
+
+Problem instances in Taco are aimed at encapsulating the characteristics of the chance constrained problem to be solved.
+Such problems must store both the dataset of values of the random variable :math:`\xi` as well as first-order oracles for the functions :math:`f` and :math:`g` involved.
+
+Skeleton of such classes typically look that way:
+
+.. code-block:: python
+
+    class TypicalProblemInstance:
+
+        def __init__(self, data):
+            self.data = data
+
+        # Two methods for the function value and gradient of the objective function, which depend only on the input x
+        def objective_func(self, x):
+            return 0.5 * np.dot(x,x)
+        def objective_grad(self, x):
+            return x
+
+        # Two methods for the function value and gradient of the constraint function, which depend on both x and the random variable xi
+
+        def objective_func(self, x, xi):
+            return np.dot(x-xi, x-xi)
+        def objective_grad(self, x, xi):
+            return 2 * (x-xi)
+
+In particular, the class must have a `data` attribute, which need to be a numpy array with 64-bit float precision and four methods to implement first order oracles for :math:`f` and :math:`g`.
+
+
+Numba compliant Implementation
+------------------------------
+
+Performances of the toolbox can be greatly improved when the user is able to provide a numba compliant class, i.e. implemented using the ``jitclass`` decorator.

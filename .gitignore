@@ -3,3 +3,6 @@ demo.ipynb
 ./taco/DS_Store/
 ./taco/__pycache__/
 .idea/
+sphinx/
+*.pyc
+taco/__pycache__/

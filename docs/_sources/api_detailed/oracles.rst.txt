@@ -1,0 +1,13 @@
+Taco API summary
+========================
+
+.. py:currentmodule:: toolbox
+
+Oracles
+-------
+
+First order oracles for the DC reformulation of the chance constrained problem.
+
+.. autosummary::
+
+        taco.Oracle

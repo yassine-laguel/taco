@@ -1,0 +1,71 @@
+Getting Started
+=================
+
+Download
+---------
+Clone the repository available on Github ::
+
+    $ git clone https://github.com/yassine-laguel/taco.git
+    $ cd taco/
+
+Installation
+------------
+Taco requires several packages one can install through ``conda`` and the provided yaml file ``taco_env.yml``::
+
+    $ conda env create --file taco_env.yml
+    $ source activate taco_env
+
+General Usage
+--------------
+The user must provide an instance of the class ``Problem``. Such class has a ``data`` attribute which is a dataset stored in the form of a numpy array. The class must provide also 4 implemented methods:
+
+* the objective function and its gradient.
+* the constraint function and its gradient.
+
+This problem instance is then used together with a dictionnary of parameters to initialize the ``Optimizer`` instance for solving.
+
+Simple Case Demo
+----------------
+
+Consider the quadratic chance constrained toy problem from our companion paper.
+
+.. code-block:: python
+
+    import numpy as np
+    np.random.seed(42)
+    mean = np.array([1.0, 1.0])
+    cov = 20 * np.eye(2)
+    nb_samples=10000
+    data = np.random.multivariate_normal(mean, cov, size=nb_samples)
+    data = np.asarray(data, dtype=np.float64)
+
+We instantiate then a quadratic problem with this dataset. Implementation of this toy problem can be found `here <https://github.com/yassine-laguel/taco/blob/main/taco/problems/toy_problem.py>`_.
+
+.. code-block:: python
+
+    problem = ToyProblem(data)
+
+A number of parameters can then be provided to instanciate the class ``Optimizer``.
+
+.. code-block:: python
+
+    from taco import Optimizer
+
+    other_params = {
+                'bund_mu_high' : 0.001  # upper bound for the proximal parameter of the bundle
+                'bund_mu_low' : 0.001  # lower bound for the proximal parameter of the bundle
+
+                'bund_max_size_bundle_set': 30,  # Maximum size for the smoothing constant
+                'superquantile_smoothing_param' : 0.1,  # smoothing constant                                      \
+            }
+
+    safety_proba_threshold =  0.03368421
+    pb_numba_compliant = True  # Set to true if the input problem is a jitclass.
+
+    optimizer = Optimizer(problem, p=0.03368421, numba=pb_numba_compliant, params=params)
+
+The user can then run the bundle method and retrieve the solution found.
+
+.. code-block:: python
+
+    solution = optimizer.run()

@@ -1,0 +1,9 @@
+The Optimization Framework
+==========================
+
+Taco provides a class ``Optimizer`` aimed at handling the whole optimization process described in our paper.
+This class takes as an input the problem instance provided by the user and the parameters the algorithm need to be launched.
+The method ``run`` of this class runs the optimization process and retrieves the solution found.
+
+.. autoclass:: taco.Optimizer
+    :members:

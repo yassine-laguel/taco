@@ -1,0 +1,14 @@
+The Oracles
+===========
+
+We propose two classes for the computation of the first order oracle associated to our DC formulation. Both oracles take as an input an instance of Problem and a few paramters such as the safety probability threshold.
+
+The classes differ in that the second one support numba-compliant problem classes. Given the ``numba`` option provided when instantiating an Optimizer, first or second class will be instantiated for solving.
+
+.. autoclass:: taco.Oracle
+    :members:
+
+.. autoclass:: taco.FastOracle
+    :members:
+
+

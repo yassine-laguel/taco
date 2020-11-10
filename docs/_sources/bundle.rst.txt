@@ -1,0 +1,9 @@
+The Bundle Method
+=================
+
+In order to run the bundle algorithm from `[De Oliveira 2019] <https://link.springer.com/article/10.1007/s10898-019-00755-4>`_, we implement a class ``BundleAlgorithm`` which encapsulates all bundle related parameters, variables and subroutines.
+
+
+.. autoclass:: taco.algorithms.BundleAlgorithm
+    :members:
+

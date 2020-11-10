@@ -1,0 +1,594 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>taco package &mdash; Taco 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> Taco
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="start.html"> Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optim_framework.html"> The Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="oracles.html"> The Oracles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bundle.html"> The Bundle Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="problems.html"> The Problems</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Taco</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>taco package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/taco.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="taco-package">
+<h1>taco package<a class="headerlink" href="#taco-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="taco.algorithms.html">taco.algorithms package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="taco.algorithms.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="taco.algorithms.html#module-taco.algorithms.bundle">taco.algorithms.bundle module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="taco.algorithms.html#module-taco.algorithms">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-taco.chance_optimizer">
+<span id="taco-chance-optimizer-module"></span><h2>taco.chance_optimizer module<a class="headerlink" href="#module-taco.chance_optimizer" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-chance_optimizer.rst"></span><dl class="py class">
+<dt id="taco.chance_optimizer.Optimizer">
+<em class="property">class </em><code class="sig-prename descclassname">taco.chance_optimizer.</code><code class="sig-name descname">Optimizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">problem</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">starting_point</span><span class="o">=</span><span class="default_value">array([0.0, 0.0, 0.0])</span></em>, <em class="sig-param"><span class="n">pen1</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pen2</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">factor_pen2</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bund_mu_start</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">performance_warnings</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">numba</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/chance_optimizer.html#Optimizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.chance_optimizer.Optimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for optimization of chance constrained problems</p>
+<p>For an problem instance providing a dataset and two first order oracles <span class="math notranslate nohighlight">\(f\)</span> and <span class="math notranslate nohighlight">\(g\)</span>, this class
+is an interface for solving the minimization problem</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – An instance of Problem</p></li>
+<li><p><strong>p</strong> (<em>np.float64</em>) – Safety probability threshold for the problem</p></li>
+<li><p><strong>starting_point</strong> (<em>np.ndarray</em>) – (optional) Starting point for the algorithm</p></li>
+<li><p><strong>pen1</strong> (<em>np.float64</em>) – (optional) First Penalization parameter</p></li>
+<li><p><strong>pen2</strong> (<em>np.float64</em>) – (optional) Second Penalization parameter</p></li>
+<li><p><strong>factor_pen2</strong> (<em>np.float64</em>) – (optional) Incremental factor for the second penalization parameter pen2</p></li>
+<li><p><strong>bund_mu_start</strong> (<em>np.float64</em>) – Starting value for the proximal parameter <span class="math notranslate nohighlight">\(\mu\)</span> of the bundle method</p></li>
+<li><p><strong>numba</strong> (<em>bool</em>) – If True, instantiate an Oracle with numba in <code class="docutils literal notranslate"><span class="pre">no-python</span></code> mode.</p></li>
+<li><p><strong>performance_warning</strong> (<em>bool</em>) – If True, prints numba performance warnings.</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Dictionnary of parameters for the optimization process</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="taco.chance_optimizer.Optimizer.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/chance_optimizer.html#Optimizer.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.chance_optimizer.Optimizer.run" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Runs the bundle method to solve the chance constrained problem.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>) – If true, prints advance of the process in the console</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>solution of the problem</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-taco.oracle">
+<span id="taco-oracle-module"></span><h2>taco.oracle module<a class="headerlink" href="#module-taco.oracle" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-oracle"></span><dl class="py class">
+<dt id="taco.oracle.Oracle">
+<em class="property">class </em><code class="sig-prename descclassname">taco.oracle.</code><code class="sig-name descname">Oracle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">problem</span></em>, <em class="sig-param"><span class="n">p</span></em>, <em class="sig-param"><span class="n">pen1</span></em>, <em class="sig-param"><span class="n">pen2</span></em>, <em class="sig-param"><span class="n">rho</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class that instantiates a first-order oracle for the DC objective of the penalized chance constaint</p>
+<p>For two input oracles <span class="math notranslate nohighlight">\(f\)</span> and <span class="math notranslate nohighlight">\(g\)</span> given through their function and gradients, and a
+sampled dataset from a random variable <span class="math notranslate nohighlight">\(\xi\)</span>, this class is an interface to compute the value
+and the gradient of the function
+<span class="math notranslate nohighlight">\(x, \eta \mapsto f(x) + \mu \max(\eta,0) + \lambda \left(G(x,\eta) - \text{CVaR}_p(g(x,\xi))\right)\)</span>
+where <span class="math notranslate nohighlight">\(G(x, \eta) = \eta + \frac{1}{1-p} \mathbb{E}[\max(g(x, \xi) - \eta]\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – Instance of Problem</p></li>
+<li><p><strong>p</strong> (<em>np.float64</em>) – Real number in [0,1]. Safety probability level</p></li>
+<li><p><strong>pen1</strong> (<em>np.float64</em>) – Penalization parameter, must be positive.</p></li>
+<li><p><strong>pen2</strong> (<em>np.float64</em>) – Penalization parameter, must be positive.</p></li>
+<li><p><strong>rho</strong> (<em>np.float64</em>) – Smoothing parameter for the superquantile, must be positive.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="taco.oracle.Oracle.constraint_func">
+<code class="sig-name descname">constraint_func</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.constraint_func"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.constraint_func" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.constraint_grad">
+<code class="sig-name descname">constraint_grad</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.constraint_grad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.constraint_grad" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.f">
+<code class="sig-name descname">f</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value of the DC objective</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.f1">
+<code class="sig-name descname">f1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.f1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.f1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value of the convex part of the DC objective <span class="math notranslate nohighlight">\(x, \eta \mapsto f(x) + \mu \max(\eta,0) + \lambda G(x,\eta)\)</span></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.f1_cc_part">
+<code class="sig-name descname">f1_cc_part</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.f1_cc_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.f1_cc_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.f1_ncc_part">
+<code class="sig-name descname">f1_ncc_part</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.f1_ncc_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.f1_ncc_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.f2">
+<code class="sig-name descname">f2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.f2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.f2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value of the concave part of the DC objective <span class="math notranslate nohighlight">\(x, \eta \mapsto - {CVaR}_p(g(x,{\xi}))\)</span></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.first_order_oracle_f2">
+<code class="sig-name descname">first_order_oracle_f2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.first_order_oracle_f2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.first_order_oracle_f2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.g1">
+<code class="sig-name descname">g1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.g1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.g1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gradient of the convex part of the DC objective <span class="math notranslate nohighlight">\(x, \eta \mapsto f(x) + \mu \max(\eta,0) + \lambda G(x,\eta)\)</span></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.g1_cc_part">
+<code class="sig-name descname">g1_cc_part</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.g1_cc_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.g1_cc_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.g1_ncc_part">
+<code class="sig-name descname">g1_ncc_part</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.g1_ncc_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.g1_ncc_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.g2">
+<code class="sig-name descname">g2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.g2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.g2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gradient of the concave part of the DC objective <span class="math notranslate nohighlight">\(x, \eta \mapsto - {CVaR}_p(g(x,{\xi}))\)</span></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.objective_func">
+<code class="sig-name descname">objective_func</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.objective_func"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.objective_func" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.objective_grad">
+<code class="sig-name descname">objective_grad</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.objective_grad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.objective_grad" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.oracle.Oracle.right_eta">
+<code class="sig-name descname">right_eta</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.right_eta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.oracle.Oracle.right_eta" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-taco">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-taco" title="Permalink to this headline">¶</a></h2>
+<p>Core module
+.. moduleauthor:: Yassine LAGUEL</p>
+<dl class="py class">
+<dt id="taco.BundleAlgorithm">
+<em class="property">class </em><code class="sig-prename descclassname">taco.</code><code class="sig-name descname">BundleAlgorithm</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">oracle</span></em>, <em class="sig-param"><span class="n">params</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/algorithms/bundle.html#BundleAlgorithm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.BundleAlgorithm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class that combines the penalization procedure with a Bundle Method to solve
+the chance constraint problem. It is instantiated with a first-oder oracle for the DC objective and a
+dictionary of parameters. From time to time, the penalization parameters are increased to escape some
+critical point of the DC objective.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>oracle</strong> – An oracle object.</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Python dictionary of parameters.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="taco.BundleAlgorithm.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/algorithms/bundle.html#BundleAlgorithm.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.BundleAlgorithm.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the optimization process
+:type verbose: bool
+:param verbose: If true, prints advance of the process in the console
+:return: solution of the problem</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="taco.FastOracle">
+<em class="property">class </em><code class="sig-prename descclassname">taco.</code><code class="sig-name descname">FastOracle</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#taco.FastOracle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">taco.oracle.FastOracle</span></code></p>
+<p>Numba version of the class Oracle.</p>
+<p>FastOracle works with numba in full no-python mode. It must take as an input an instance of problem
+that is a jitclass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – Instance of Problem. Must be a numba jitclass.</p></li>
+<li><p><strong>p</strong> (<em>np.float64</em>) – Real number in [0,1]. Safety probability level</p></li>
+<li><p><strong>pen1</strong> (<em>np.float64</em>) – Penalization parameter, must be positive.</p></li>
+<li><p><strong>pen2</strong> (<em>np.float64</em>) – Penalization parameter, must be positive.</p></li>
+<li><p><strong>rho</strong> (<em>np.float64</em>) – Smoothing parameter for the superquantile, must be positive.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="taco.FastOracle.class_type">
+<code class="sig-name descname">class_type</code><em class="property"> = jitclass.FastOracle#12109b198&lt;problem:instance.jitclass.ToyProblem#12106d748&lt;a:array(float64, 1d, A),data:array(float64, 2d, A),geo_a:array(float64, 2d, A)&gt;,sample_size:int32,p:float64,pen1:float64,pen2:float64,rho:float64&gt;</em><a class="headerlink" href="#taco.FastOracle.class_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="taco.Optimizer">
+<em class="property">class </em><code class="sig-prename descclassname">taco.</code><code class="sig-name descname">Optimizer</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">problem</span></em>, <em class="sig-param"><span class="n">p</span><span class="o">=</span><span class="default_value">0.01</span></em>, <em class="sig-param"><span class="n">starting_point</span><span class="o">=</span><span class="default_value">array([0.0, 0.0, 0.0])</span></em>, <em class="sig-param"><span class="n">pen1</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">pen2</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">factor_pen2</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">bund_mu_start</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">performance_warnings</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">numba</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/chance_optimizer.html#Optimizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Optimizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for optimization of chance constrained problems</p>
+<p>For an problem instance providing a dataset and two first order oracles <span class="math notranslate nohighlight">\(f\)</span> and <span class="math notranslate nohighlight">\(g\)</span>, this class
+is an interface for solving the minimization problem</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – An instance of Problem</p></li>
+<li><p><strong>p</strong> (<em>np.float64</em>) – Safety probability threshold for the problem</p></li>
+<li><p><strong>starting_point</strong> (<em>np.ndarray</em>) – (optional) Starting point for the algorithm</p></li>
+<li><p><strong>pen1</strong> (<em>np.float64</em>) – (optional) First Penalization parameter</p></li>
+<li><p><strong>pen2</strong> (<em>np.float64</em>) – (optional) Second Penalization parameter</p></li>
+<li><p><strong>factor_pen2</strong> (<em>np.float64</em>) – (optional) Incremental factor for the second penalization parameter pen2</p></li>
+<li><p><strong>bund_mu_start</strong> (<em>np.float64</em>) – Starting value for the proximal parameter <span class="math notranslate nohighlight">\(\mu\)</span> of the bundle method</p></li>
+<li><p><strong>numba</strong> (<em>bool</em>) – If True, instantiate an Oracle with numba in <code class="docutils literal notranslate"><span class="pre">no-python</span></code> mode.</p></li>
+<li><p><strong>performance_warning</strong> (<em>bool</em>) – If True, prints numba performance warnings.</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – Dictionnary of parameters for the optimization process</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="taco.Optimizer.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">verbose</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/chance_optimizer.html#Optimizer.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Optimizer.run" title="Permalink to this definition">¶</a></dt>
+<dd><blockquote>
+<div><p>Runs the bundle method to solve the chance constrained problem.</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>) – If true, prints advance of the process in the console</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>solution of the problem</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="taco.Oracle">
+<em class="property">class </em><code class="sig-prename descclassname">taco.</code><code class="sig-name descname">Oracle</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">problem</span></em>, <em class="sig-param"><span class="n">p</span></em>, <em class="sig-param"><span class="n">pen1</span></em>, <em class="sig-param"><span class="n">pen2</span></em>, <em class="sig-param"><span class="n">rho</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class that instantiates a first-order oracle for the DC objective of the penalized chance constaint</p>
+<p>For two input oracles <span class="math notranslate nohighlight">\(f\)</span> and <span class="math notranslate nohighlight">\(g\)</span> given through their function and gradients, and a
+sampled dataset from a random variable <span class="math notranslate nohighlight">\(\xi\)</span>, this class is an interface to compute the value
+and the gradient of the function
+<span class="math notranslate nohighlight">\(x, \eta \mapsto f(x) + \mu \max(\eta,0) + \lambda \left(G(x,\eta) - \text{CVaR}_p(g(x,\xi))\right)\)</span>
+where <span class="math notranslate nohighlight">\(G(x, \eta) = \eta + \frac{1}{1-p} \mathbb{E}[\max(g(x, \xi) - \eta]\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> – Instance of Problem</p></li>
+<li><p><strong>p</strong> (<em>np.float64</em>) – Real number in [0,1]. Safety probability level</p></li>
+<li><p><strong>pen1</strong> (<em>np.float64</em>) – Penalization parameter, must be positive.</p></li>
+<li><p><strong>pen2</strong> (<em>np.float64</em>) – Penalization parameter, must be positive.</p></li>
+<li><p><strong>rho</strong> (<em>np.float64</em>) – Smoothing parameter for the superquantile, must be positive.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="taco.Oracle.constraint_func">
+<code class="sig-name descname">constraint_func</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.constraint_func"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.constraint_func" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.constraint_grad">
+<code class="sig-name descname">constraint_grad</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.constraint_grad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.constraint_grad" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.f">
+<code class="sig-name descname">f</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.f"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.f" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value of the DC objective</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.f1">
+<code class="sig-name descname">f1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.f1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.f1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value of the convex part of the DC objective <span class="math notranslate nohighlight">\(x, \eta \mapsto f(x) + \mu \max(\eta,0) + \lambda G(x,\eta)\)</span></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.f1_cc_part">
+<code class="sig-name descname">f1_cc_part</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.f1_cc_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.f1_cc_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.f1_ncc_part">
+<code class="sig-name descname">f1_ncc_part</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.f1_ncc_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.f1_ncc_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.f2">
+<code class="sig-name descname">f2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.f2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.f2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Value of the concave part of the DC objective <span class="math notranslate nohighlight">\(x, \eta \mapsto - {CVaR}_p(g(x,{\xi}))\)</span></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.first_order_oracle_f2">
+<code class="sig-name descname">first_order_oracle_f2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.first_order_oracle_f2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.first_order_oracle_f2" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.g1">
+<code class="sig-name descname">g1</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.g1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.g1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gradient of the convex part of the DC objective <span class="math notranslate nohighlight">\(x, \eta \mapsto f(x) + \mu \max(\eta,0) + \lambda G(x,\eta)\)</span></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.g1_cc_part">
+<code class="sig-name descname">g1_cc_part</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.g1_cc_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.g1_cc_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.g1_ncc_part">
+<code class="sig-name descname">g1_ncc_part</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.g1_ncc_part"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.g1_ncc_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.g2">
+<code class="sig-name descname">g2</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.g2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.g2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gradient of the concave part of the DC objective <span class="math notranslate nohighlight">\(x, \eta \mapsto - {CVaR}_p(g(x,{\xi}))\)</span></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.objective_func">
+<code class="sig-name descname">objective_func</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.objective_func"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.objective_func" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.objective_grad">
+<code class="sig-name descname">objective_grad</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.objective_grad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.objective_grad" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.Oracle.right_eta">
+<code class="sig-name descname">right_eta</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/oracle.html#Oracle.right_eta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.Oracle.right_eta" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="taco.ToyProblem">
+<em class="property">class </em><code class="sig-prename descclassname">taco.</code><code class="sig-name descname">ToyProblem</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#taco.ToyProblem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">taco.problems.toy_problem.ToyProblem</span></code></p>
+<dl class="py attribute">
+<dt id="taco.ToyProblem.class_type">
+<code class="sig-name descname">class_type</code><em class="property"> = jitclass.ToyProblem#12106d748&lt;a:array(float64, 1d, A),data:array(float64, 2d, A),geo_a:array(float64, 2d, A)&gt;</em><a class="headerlink" href="#taco.ToyProblem.class_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.ToyProblem.constraint_grad">
+<code class="sig-name descname">constraint_grad</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">z</span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/problems/toy_problem.html#ToyProblem.constraint_grad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.ToyProblem.constraint_grad" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="taco.ToyProblem.mat_w">
+<code class="sig-name descname">mat_w</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/taco/problems/toy_problem.html#ToyProblem.mat_w"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#taco.ToyProblem.mat_w" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Yassine Laguel
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

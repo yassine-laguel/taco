@@ -1,0 +1,778 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>numba.experimental.jitclass.base &mdash; Taco 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home" alt="Documentation Home"> Taco
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../start.html"> Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../optim_framework.html"> The Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../oracles.html"> The Oracles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../bundle.html"> The Bundle Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../problems.html"> The Problems</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Taco</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>numba.experimental.jitclass.base</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for numba.experimental.jitclass.base</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">import</span> <span class="nn">types</span> <span class="k">as</span> <span class="nn">pytypes</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">operator</span>
+
+<span class="kn">from</span> <span class="nn">llvmlite</span> <span class="kn">import</span> <span class="n">ir</span> <span class="k">as</span> <span class="n">llvmir</span>
+
+<span class="kn">from</span> <span class="nn">numba.core</span> <span class="kn">import</span> <span class="n">types</span><span class="p">,</span> <span class="n">utils</span><span class="p">,</span> <span class="n">errors</span><span class="p">,</span> <span class="n">cgutils</span><span class="p">,</span> <span class="n">imputils</span>
+<span class="kn">from</span> <span class="nn">numba.core.registry</span> <span class="kn">import</span> <span class="n">cpu_target</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">njit</span>
+<span class="kn">from</span> <span class="nn">numba.core.typing</span> <span class="kn">import</span> <span class="n">templates</span>
+<span class="kn">from</span> <span class="nn">numba.core.datamodel</span> <span class="kn">import</span> <span class="n">default_manager</span><span class="p">,</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">numba.experimental.jitclass</span> <span class="kn">import</span> <span class="n">_box</span>
+
+
+<span class="c1">##############################################################################</span>
+<span class="c1"># Data model</span>
+
+
+<span class="k">class</span> <span class="nc">InstanceModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">StructModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dmm</span><span class="p">,</span> <span class="n">fe_typ</span><span class="p">):</span>
+        <span class="n">cls_data_ty</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">ClassDataType</span><span class="p">(</span><span class="n">fe_typ</span><span class="p">)</span>
+        <span class="c1"># MemInfoPointer uses the `dtype` attribute to traverse for nested</span>
+        <span class="c1"># NRT MemInfo.  Since we handle nested NRT MemInfo ourselves,</span>
+        <span class="c1"># we will replace provide MemInfoPointer with an opaque type</span>
+        <span class="c1"># so that it does not raise exception for nested meminfo.</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Opaque</span><span class="p">(</span><span class="s1">&#39;Opaque.&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">cls_data_ty</span><span class="p">))</span>
+        <span class="n">members</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="s1">&#39;meminfo&#39;</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">MemInfoPointer</span><span class="p">(</span><span class="n">dtype</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">CPointer</span><span class="p">(</span><span class="n">cls_data_ty</span><span class="p">)),</span>
+        <span class="p">]</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">InstanceModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dmm</span><span class="p">,</span> <span class="n">fe_typ</span><span class="p">,</span> <span class="n">members</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">InstanceDataModel</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">StructModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dmm</span><span class="p">,</span> <span class="n">fe_typ</span><span class="p">):</span>
+        <span class="n">clsty</span> <span class="o">=</span> <span class="n">fe_typ</span><span class="o">.</span><span class="n">class_type</span>
+        <span class="n">members</span> <span class="o">=</span> <span class="p">[(</span><span class="n">_mangle_attr</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">clsty</span><span class="o">.</span><span class="n">struct</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">InstanceDataModel</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dmm</span><span class="p">,</span> <span class="n">fe_typ</span><span class="p">,</span> <span class="n">members</span><span class="p">)</span>
+
+
+<span class="n">default_manager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">ClassInstanceType</span><span class="p">,</span> <span class="n">InstanceModel</span><span class="p">)</span>
+<span class="n">default_manager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">ClassDataType</span><span class="p">,</span> <span class="n">InstanceDataModel</span><span class="p">)</span>
+<span class="n">default_manager</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">ClassType</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">OpaqueModel</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_mangle_attr</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mangle attributes.</span>
+<span class="sd">    The resulting name does not startswith an underscore &#39;_&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">&#39;m_&#39;</span> <span class="o">+</span> <span class="n">name</span>
+
+
+<span class="c1">##############################################################################</span>
+<span class="c1"># Class object</span>
+
+<span class="n">_ctor_template</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">def ctor(</span><span class="si">{args}</span><span class="s2">):</span>
+<span class="s2">    return __numba_cls_(</span><span class="si">{args}</span><span class="s2">)</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_getargs</span><span class="p">(</span><span class="n">fn_sig</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns list of positional and keyword argument names in order.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="n">fn_sig</span><span class="o">.</span><span class="n">parameters</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">kind</span> <span class="o">&amp;</span> <span class="n">v</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">)</span> <span class="o">==</span> <span class="n">v</span><span class="o">.</span><span class="n">POSITIONAL_OR_KEYWORD</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> argument type unsupported in jitclass&quot;</span> <span class="o">%</span> <span class="n">v</span><span class="o">.</span><span class="n">kind</span>
+            <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnsupportedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">args</span>
+
+
+<span class="k">class</span> <span class="nc">JitClassType</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The type of any jitclass.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">dct</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">bases</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;must have exactly one base class&quot;</span><span class="p">)</span>
+        <span class="p">[</span><span class="n">base</span><span class="p">]</span> <span class="o">=</span> <span class="n">bases</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="n">JitClassType</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;cannot subclass from a jitclass&quot;</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s1">&#39;class_type&#39;</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">,</span> <span class="s1">&#39;missing &quot;class_type&quot; attr&#39;</span>
+        <span class="n">outcls</span> <span class="o">=</span> <span class="nb">type</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">bases</span><span class="p">,</span> <span class="n">dct</span><span class="p">)</span>
+        <span class="n">outcls</span><span class="o">.</span><span class="n">_set_init</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">outcls</span>
+
+    <span class="k">def</span> <span class="nf">_set_init</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate a wrapper for calling the constructor from pure Python.</span>
+<span class="sd">        Note the wrapper will only accept positional arguments.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">init</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">class_type</span><span class="o">.</span><span class="n">instance_type</span><span class="o">.</span><span class="n">methods</span><span class="p">[</span><span class="s1">&#39;__init__&#39;</span><span class="p">]</span>
+        <span class="n">init_sig</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">pysignature</span><span class="p">(</span><span class="n">init</span><span class="p">)</span>
+        <span class="c1"># get postitional and keyword arguments</span>
+        <span class="c1"># offset by one to exclude the `self` arg</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">_getargs</span><span class="p">(</span><span class="n">init_sig</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_ctor_sig</span> <span class="o">=</span> <span class="n">init_sig</span>
+        <span class="n">ctor_source</span> <span class="o">=</span> <span class="n">_ctor_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+        <span class="n">glbls</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;__numba_cls_&quot;</span><span class="p">:</span> <span class="bp">cls</span><span class="p">}</span>
+        <span class="n">exec</span><span class="p">(</span><span class="n">ctor_source</span><span class="p">,</span> <span class="n">glbls</span><span class="p">)</span>
+        <span class="n">ctor</span> <span class="o">=</span> <span class="n">glbls</span><span class="p">[</span><span class="s1">&#39;ctor&#39;</span><span class="p">]</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_ctor</span> <span class="o">=</span> <span class="n">njit</span><span class="p">(</span><span class="n">ctor</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__instancecheck__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">_box</span><span class="o">.</span><span class="n">Box</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">_numba_type_</span><span class="o">.</span><span class="n">class_type</span> <span class="ow">is</span> <span class="bp">cls</span><span class="o">.</span><span class="n">class_type</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># The first argument of _ctor_sig is `cls`, which here</span>
+        <span class="c1"># is bound to None and then skipped when invoking the constructor.</span>
+        <span class="n">bind</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_ctor_sig</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">bind</span><span class="o">.</span><span class="n">apply_defaults</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_ctor</span><span class="p">(</span><span class="o">*</span><span class="n">bind</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="o">**</span><span class="n">bind</span><span class="o">.</span><span class="n">kwargs</span><span class="p">)</span>
+
+
+<span class="c1">##############################################################################</span>
+<span class="c1"># Registration utils</span>
+
+<span class="k">def</span> <span class="nf">_validate_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;spec keys should be strings, got </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">Type</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;spec values should be Numba type instances, got </span><span class="si">%r</span><span class="s2">&quot;</span>
+                            <span class="o">%</span> <span class="p">(</span><span class="n">v</span><span class="p">,))</span>
+
+
+<span class="k">def</span> <span class="nf">_fix_up_private_attr</span><span class="p">(</span><span class="n">clsname</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply the same changes to dunder names as CPython would.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">k</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">k</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">):</span>
+            <span class="n">k</span> <span class="o">=</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">clsname</span> <span class="o">+</span> <span class="n">k</span>
+        <span class="n">out</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span> <span class="nf">_add_linking_libs</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">call</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add the required libs for the callable to allow inlining.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">libs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">call</span><span class="p">,</span> <span class="s2">&quot;libs&quot;</span><span class="p">,</span> <span class="p">())</span>
+    <span class="k">if</span> <span class="n">libs</span><span class="p">:</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">add_linking_libs</span><span class="p">(</span><span class="n">libs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">register_class_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">spec</span><span class="p">,</span> <span class="n">class_ctor</span><span class="p">,</span> <span class="n">builder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Internal function to create a jitclass.</span>
+
+<span class="sd">    Args</span>
+<span class="sd">    ----</span>
+<span class="sd">    cls: the original class object (used as the prototype)</span>
+<span class="sd">    spec: the structural specification contains the field types.</span>
+<span class="sd">    class_ctor: the numba type to represent the jitclass</span>
+<span class="sd">    builder: the internal jitclass builder</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Normalize spec</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">):</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="n">_validate_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+
+    <span class="c1"># Fix up private attribute names</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">_fix_up_private_attr</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">spec</span><span class="p">)</span>
+
+    <span class="c1"># Copy methods from base classes</span>
+    <span class="n">clsdct</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">basecls</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getmro</span><span class="p">(</span><span class="bp">cls</span><span class="p">)):</span>
+        <span class="n">clsdct</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">basecls</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+
+    <span class="n">methods</span><span class="p">,</span> <span class="n">props</span><span class="p">,</span> <span class="n">static_methods</span><span class="p">,</span> <span class="n">others</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{},</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">clsdct</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">pytypes</span><span class="o">.</span><span class="n">FunctionType</span><span class="p">):</span>
+            <span class="n">methods</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">property</span><span class="p">):</span>
+            <span class="n">props</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">staticmethod</span><span class="p">):</span>
+            <span class="n">static_methods</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">others</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+    <span class="c1"># Check for name shadowing</span>
+    <span class="n">shadowed</span> <span class="o">=</span> <span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">methods</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">props</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">static_methods</span><span class="p">))</span> <span class="o">&amp;</span> <span class="nb">set</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">shadowed</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="s2">&quot;name shadowing: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">shadowed</span><span class="p">)))</span>
+
+    <span class="n">docstring</span> <span class="o">=</span> <span class="n">others</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;__doc__&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">_drop_ignored_attrs</span><span class="p">(</span><span class="n">others</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">others</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;class members are not yet supported: </span><span class="si">{0}</span><span class="s2">&quot;</span>
+        <span class="n">members</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">others</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">members</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">props</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">fdel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;deleter is not supported: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">))</span>
+
+    <span class="n">jit_methods</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">njit</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">methods</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="n">jit_props</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">props</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">dct</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">fget</span><span class="p">:</span>
+            <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">njit</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">fget</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">fset</span><span class="p">:</span>
+            <span class="n">dct</span><span class="p">[</span><span class="s1">&#39;set&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">njit</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">fset</span><span class="p">)</span>
+        <span class="n">jit_props</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">dct</span>
+
+    <span class="n">jit_static_methods</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">k</span><span class="p">:</span> <span class="n">njit</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="vm">__func__</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">static_methods</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+    <span class="c1"># Instantiate class type</span>
+    <span class="n">class_type</span> <span class="o">=</span> <span class="n">class_ctor</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">ConstructorTemplate</span><span class="p">,</span>
+        <span class="n">spec</span><span class="p">,</span>
+        <span class="n">jit_methods</span><span class="p">,</span>
+        <span class="n">jit_props</span><span class="p">,</span>
+        <span class="n">jit_static_methods</span><span class="p">)</span>
+
+    <span class="n">jit_class_dct</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">class_type</span><span class="o">=</span><span class="n">class_type</span><span class="p">,</span> <span class="vm">__doc__</span><span class="o">=</span><span class="n">docstring</span><span class="p">)</span>
+    <span class="n">jit_class_dct</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">jit_static_methods</span><span class="p">)</span>
+    <span class="bp">cls</span> <span class="o">=</span> <span class="n">JitClassType</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="p">(</span><span class="bp">cls</span><span class="p">,),</span> <span class="n">jit_class_dct</span><span class="p">)</span>
+
+    <span class="c1"># Register resolution of the class object</span>
+    <span class="n">typingctx</span> <span class="o">=</span> <span class="n">cpu_target</span><span class="o">.</span><span class="n">typing_context</span>
+    <span class="n">typingctx</span><span class="o">.</span><span class="n">insert_global</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">class_type</span><span class="p">)</span>
+
+    <span class="c1"># Register class</span>
+    <span class="n">targetctx</span> <span class="o">=</span> <span class="n">cpu_target</span><span class="o">.</span><span class="n">target_context</span>
+    <span class="n">builder</span><span class="p">(</span><span class="n">class_type</span><span class="p">,</span> <span class="n">typingctx</span><span class="p">,</span> <span class="n">targetctx</span><span class="p">)</span><span class="o">.</span><span class="n">register</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="bp">cls</span>
+
+
+<span class="k">class</span> <span class="nc">ConstructorTemplate</span><span class="p">(</span><span class="n">templates</span><span class="o">.</span><span class="n">AbstractTemplate</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Base class for jitclass constructor templates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">generic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kws</span><span class="p">):</span>
+        <span class="c1"># Redirect resolution to __init__</span>
+        <span class="n">instance_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">instance_type</span>
+        <span class="n">ctor</span> <span class="o">=</span> <span class="n">instance_type</span><span class="o">.</span><span class="n">jit_methods</span><span class="p">[</span><span class="s1">&#39;__init__&#39;</span><span class="p">]</span>
+        <span class="n">boundargs</span> <span class="o">=</span> <span class="p">(</span><span class="n">instance_type</span><span class="o">.</span><span class="n">get_reference_type</span><span class="p">(),)</span> <span class="o">+</span> <span class="n">args</span>
+        <span class="n">disp_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Dispatcher</span><span class="p">(</span><span class="n">ctor</span><span class="p">)</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">disp_type</span><span class="o">.</span><span class="n">get_call_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">boundargs</span><span class="p">,</span> <span class="n">kws</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">return_type</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">NoneType</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;__init__() should return None, not &#39;</span><span class="si">{</span><span class="n">sig</span><span class="o">.</span><span class="n">return_type</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Actual constructor returns an instance value (not None)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">templates</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">instance_type</span><span class="p">,</span> <span class="o">*</span><span class="n">sig</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span> <span class="nf">_drop_ignored_attrs</span><span class="p">(</span><span class="n">dct</span><span class="p">):</span>
+    <span class="c1"># ignore anything defined by object</span>
+    <span class="n">drop</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s1">&#39;__weakref__&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;__module__&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;__dict__&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="s1">&#39;__annotations__&#39;</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">:</span>
+        <span class="n">drop</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;__annotations__&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">dct</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="n">pytypes</span><span class="o">.</span><span class="n">BuiltinFunctionType</span><span class="p">,</span>
+                          <span class="n">pytypes</span><span class="o">.</span><span class="n">BuiltinMethodType</span><span class="p">)):</span>
+            <span class="n">drop</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="s1">&#39;__objclass__&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">object</span><span class="p">:</span>
+            <span class="n">drop</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">drop</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">dct</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+
+<span class="k">class</span> <span class="nc">ClassBuilder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A jitclass builder for a mutable jitclass.  This will register</span>
+<span class="sd">    typing and implementation hooks to the given typing and target contexts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">class_impl_registry</span> <span class="o">=</span> <span class="n">imputils</span><span class="o">.</span><span class="n">Registry</span><span class="p">()</span>
+    <span class="n">implemented_methods</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">class_type</span><span class="p">,</span> <span class="n">typingctx</span><span class="p">,</span> <span class="n">targetctx</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">class_type</span> <span class="o">=</span> <span class="n">class_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">typingctx</span> <span class="o">=</span> <span class="n">typingctx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">targetctx</span> <span class="o">=</span> <span class="n">targetctx</span>
+
+    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register to the frontend and backend.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Register generic implementations for all jitclasses</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_register_methods</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">class_impl_registry</span><span class="p">,</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">class_type</span><span class="o">.</span><span class="n">instance_type</span><span class="p">)</span>
+        <span class="c1"># NOTE other registrations are done at the top-level</span>
+        <span class="c1"># (see ctor_impl and attr_impl below)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">targetctx</span><span class="o">.</span><span class="n">install_registry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">class_impl_registry</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_register_methods</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry</span><span class="p">,</span> <span class="n">instance_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Register method implementations.</span>
+<span class="sd">        This simply registers that the method names are valid methods.  Inside</span>
+<span class="sd">        of imp() below we retrieve the actual method to run from the type of</span>
+<span class="sd">        the reciever argument (i.e. self).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">to_register</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">instance_type</span><span class="o">.</span><span class="n">jit_methods</span><span class="p">)</span> <span class="o">+</span> \
+            <span class="nb">list</span><span class="p">(</span><span class="n">instance_type</span><span class="o">.</span><span class="n">jit_static_methods</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">meth</span> <span class="ow">in</span> <span class="n">to_register</span><span class="p">:</span>
+
+            <span class="c1"># There&#39;s no way to retrieve the particular method name</span>
+            <span class="c1"># inside the implementation function, so we have to register a</span>
+            <span class="c1"># specific closure for each different name</span>
+            <span class="k">if</span> <span class="n">meth</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">implemented_methods</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_implement_method</span><span class="p">(</span><span class="n">registry</span><span class="p">,</span> <span class="n">meth</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">implemented_methods</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">meth</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_implement_method</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="c1"># create a separate instance of imp method to avoid closure clashing</span>
+        <span class="k">def</span> <span class="nf">get_imp</span><span class="p">():</span>
+            <span class="k">def</span> <span class="nf">imp</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+                <span class="n">instance_type</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">instance_type</span><span class="o">.</span><span class="n">jit_methods</span><span class="p">:</span>
+                    <span class="n">method</span> <span class="o">=</span> <span class="n">instance_type</span><span class="o">.</span><span class="n">jit_methods</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">instance_type</span><span class="o">.</span><span class="n">jit_static_methods</span><span class="p">:</span>
+                    <span class="n">method</span> <span class="o">=</span> <span class="n">instance_type</span><span class="o">.</span><span class="n">jit_static_methods</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+                    <span class="c1"># imp gets called as a method, where the first argument is</span>
+                    <span class="c1"># self.  We drop this for a static method.</span>
+                    <span class="n">sig</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">sig</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+                <span class="n">disp_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Dispatcher</span><span class="p">(</span><span class="n">method</span><span class="p">)</span>
+                <span class="n">call</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_function</span><span class="p">(</span><span class="n">disp_type</span><span class="p">,</span> <span class="n">sig</span><span class="p">)</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">call</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+                <span class="n">_add_linking_libs</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">call</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">imputils</span><span class="o">.</span><span class="n">impl_ret_new_ref</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span>
+                                                 <span class="n">sig</span><span class="o">.</span><span class="n">return_type</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">imp</span>
+
+        <span class="k">def</span> <span class="nf">_getsetitem_gen</span><span class="p">(</span><span class="n">getset</span><span class="p">):</span>
+            <span class="n">_dunder_meth</span> <span class="o">=</span> <span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">__&quot;</span> <span class="o">%</span> <span class="n">getset</span>
+            <span class="n">op</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">operator</span><span class="p">,</span> <span class="n">getset</span><span class="p">)</span>
+
+            <span class="nd">@templates</span><span class="o">.</span><span class="n">infer_global</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+            <span class="k">class</span> <span class="nc">GetSetItem</span><span class="p">(</span><span class="n">templates</span><span class="o">.</span><span class="n">AbstractTemplate</span><span class="p">):</span>
+                <span class="k">def</span> <span class="nf">generic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kws</span><span class="p">):</span>
+                    <span class="n">instance</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">ClassInstanceType</span><span class="p">)</span> <span class="ow">and</span> \
+                            <span class="n">_dunder_meth</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">jit_methods</span><span class="p">:</span>
+                        <span class="n">meth</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">jit_methods</span><span class="p">[</span><span class="n">_dunder_meth</span><span class="p">]</span>
+                        <span class="n">disp_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Dispatcher</span><span class="p">(</span><span class="n">meth</span><span class="p">)</span>
+                        <span class="n">sig</span> <span class="o">=</span> <span class="n">disp_type</span><span class="o">.</span><span class="n">get_call_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kws</span><span class="p">)</span>
+                        <span class="k">return</span> <span class="n">sig</span>
+
+            <span class="c1"># lower both {g,s}etitem and __{g,s}etitem__ to catch the calls</span>
+            <span class="c1"># from python and numba</span>
+            <span class="n">imputils</span><span class="o">.</span><span class="n">lower_builtin</span><span class="p">((</span><span class="n">types</span><span class="o">.</span><span class="n">ClassInstanceType</span><span class="p">,</span> <span class="n">_dunder_meth</span><span class="p">),</span>
+                                   <span class="n">types</span><span class="o">.</span><span class="n">ClassInstanceType</span><span class="p">,</span>
+                                   <span class="n">types</span><span class="o">.</span><span class="n">VarArg</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">Any</span><span class="p">))(</span><span class="n">get_imp</span><span class="p">())</span>
+            <span class="n">imputils</span><span class="o">.</span><span class="n">lower_builtin</span><span class="p">(</span><span class="n">op</span><span class="p">,</span>
+                                   <span class="n">types</span><span class="o">.</span><span class="n">ClassInstanceType</span><span class="p">,</span>
+                                   <span class="n">types</span><span class="o">.</span><span class="n">VarArg</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">Any</span><span class="p">))(</span><span class="n">get_imp</span><span class="p">())</span>
+
+        <span class="n">dunder_stripped</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dunder_stripped</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;getitem&quot;</span><span class="p">,</span> <span class="s2">&quot;setitem&quot;</span><span class="p">):</span>
+            <span class="n">_getsetitem_gen</span><span class="p">(</span><span class="n">dunder_stripped</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">registry</span><span class="o">.</span><span class="n">lower</span><span class="p">((</span><span class="n">types</span><span class="o">.</span><span class="n">ClassInstanceType</span><span class="p">,</span> <span class="n">attr</span><span class="p">),</span>
+                           <span class="n">types</span><span class="o">.</span><span class="n">ClassInstanceType</span><span class="p">,</span>
+                           <span class="n">types</span><span class="o">.</span><span class="n">VarArg</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">Any</span><span class="p">))(</span><span class="n">get_imp</span><span class="p">())</span>
+
+
+<span class="nd">@templates</span><span class="o">.</span><span class="n">infer_getattr</span>
+<span class="k">class</span> <span class="nc">ClassAttribute</span><span class="p">(</span><span class="n">templates</span><span class="o">.</span><span class="n">AttributeTemplate</span><span class="p">):</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">ClassInstanceType</span>
+
+    <span class="k">def</span> <span class="nf">generic_resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">struct</span><span class="p">:</span>
+            <span class="c1"># It&#39;s a struct field =&gt; the type is well-known</span>
+            <span class="k">return</span> <span class="n">instance</span><span class="o">.</span><span class="n">struct</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+
+        <span class="k">elif</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">jit_methods</span><span class="p">:</span>
+            <span class="c1"># It&#39;s a jitted method =&gt; typeinfer it</span>
+            <span class="n">meth</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">jit_methods</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+            <span class="n">disp_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Dispatcher</span><span class="p">(</span><span class="n">meth</span><span class="p">)</span>
+
+            <span class="k">class</span> <span class="nc">MethodTemplate</span><span class="p">(</span><span class="n">templates</span><span class="o">.</span><span class="n">AbstractTemplate</span><span class="p">):</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+
+                <span class="k">def</span> <span class="nf">generic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kws</span><span class="p">):</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">instance</span><span class="p">,)</span> <span class="o">+</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+                    <span class="n">sig</span> <span class="o">=</span> <span class="n">disp_type</span><span class="o">.</span><span class="n">get_call_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kws</span><span class="p">)</span>
+                    <span class="k">return</span> <span class="n">sig</span><span class="o">.</span><span class="n">as_method</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">BoundFunction</span><span class="p">(</span><span class="n">MethodTemplate</span><span class="p">,</span> <span class="n">instance</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">jit_static_methods</span><span class="p">:</span>
+            <span class="c1"># It&#39;s a jitted method =&gt; typeinfer it</span>
+            <span class="n">meth</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">jit_static_methods</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+            <span class="n">disp_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Dispatcher</span><span class="p">(</span><span class="n">meth</span><span class="p">)</span>
+
+            <span class="k">class</span> <span class="nc">StaticMethodTemplate</span><span class="p">(</span><span class="n">templates</span><span class="o">.</span><span class="n">AbstractTemplate</span><span class="p">):</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+
+                <span class="k">def</span> <span class="nf">generic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kws</span><span class="p">):</span>
+                    <span class="c1"># Don&#39;t add instance as the first argument for a static</span>
+                    <span class="c1"># method.</span>
+                    <span class="n">sig</span> <span class="o">=</span> <span class="n">disp_type</span><span class="o">.</span><span class="n">get_call_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kws</span><span class="p">)</span>
+                    <span class="c1"># sig itself does not include ClassInstanceType as it&#39;s</span>
+                    <span class="c1"># first argument, so instead of calling sig.as_method()</span>
+                    <span class="c1"># we insert the recvr. This is equivalent to</span>
+                    <span class="c1"># sig.replace(args=(instance,) + sig.args).as_method().</span>
+                    <span class="k">return</span> <span class="n">sig</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">recvr</span><span class="o">=</span><span class="n">instance</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">BoundFunction</span><span class="p">(</span><span class="n">StaticMethodTemplate</span><span class="p">,</span> <span class="n">instance</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">instance</span><span class="o">.</span><span class="n">jit_props</span><span class="p">:</span>
+            <span class="c1"># It&#39;s a jitted property =&gt; typeinfer its getter</span>
+            <span class="n">impdct</span> <span class="o">=</span> <span class="n">instance</span><span class="o">.</span><span class="n">jit_props</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+            <span class="n">getter</span> <span class="o">=</span> <span class="n">impdct</span><span class="p">[</span><span class="s1">&#39;get&#39;</span><span class="p">]</span>
+            <span class="n">disp_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Dispatcher</span><span class="p">(</span><span class="n">getter</span><span class="p">)</span>
+            <span class="n">sig</span> <span class="o">=</span> <span class="n">disp_type</span><span class="o">.</span><span class="n">get_call_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="p">,</span> <span class="p">(</span><span class="n">instance</span><span class="p">,),</span> <span class="p">{})</span>
+            <span class="k">return</span> <span class="n">sig</span><span class="o">.</span><span class="n">return_type</span>
+
+
+<span class="nd">@ClassBuilder</span><span class="o">.</span><span class="n">class_impl_registry</span><span class="o">.</span><span class="n">lower_getattr_generic</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">ClassInstanceType</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_attr_impl</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">typ</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic getattr() for @jitclass instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">typ</span><span class="o">.</span><span class="n">struct</span><span class="p">:</span>
+        <span class="c1"># It&#39;s a struct field</span>
+        <span class="n">inst</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">make_helper</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">typ</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">data_pointer</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">make_data_helper</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">typ</span><span class="o">.</span><span class="n">get_data_type</span><span class="p">(),</span>
+                                        <span class="n">ref</span><span class="o">=</span><span class="n">data_pointer</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">imputils</span><span class="o">.</span><span class="n">impl_ret_borrowed</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span>
+                                          <span class="n">typ</span><span class="o">.</span><span class="n">struct</span><span class="p">[</span><span class="n">attr</span><span class="p">],</span>
+                                          <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">_mangle_attr</span><span class="p">(</span><span class="n">attr</span><span class="p">)))</span>
+    <span class="k">elif</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">typ</span><span class="o">.</span><span class="n">jit_props</span><span class="p">:</span>
+        <span class="c1"># It&#39;s a jitted property</span>
+        <span class="n">getter</span> <span class="o">=</span> <span class="n">typ</span><span class="o">.</span><span class="n">jit_props</span><span class="p">[</span><span class="n">attr</span><span class="p">][</span><span class="s1">&#39;get&#39;</span><span class="p">]</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">templates</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">typ</span><span class="p">)</span>
+        <span class="n">dispatcher</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Dispatcher</span><span class="p">(</span><span class="n">getter</span><span class="p">)</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">dispatcher</span><span class="o">.</span><span class="n">get_call_type</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">typing_context</span><span class="p">,</span> <span class="p">[</span><span class="n">typ</span><span class="p">],</span> <span class="p">{})</span>
+        <span class="n">call</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_function</span><span class="p">(</span><span class="n">dispatcher</span><span class="p">,</span> <span class="n">sig</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">call</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="p">[</span><span class="n">value</span><span class="p">])</span>
+        <span class="n">_add_linking_libs</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">call</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">imputils</span><span class="o">.</span><span class="n">impl_ret_new_ref</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">sig</span><span class="o">.</span><span class="n">return_type</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;attribute </span><span class="si">{0!r}</span><span class="s1"> not implemented&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
+
+
+<span class="nd">@ClassBuilder</span><span class="o">.</span><span class="n">class_impl_registry</span><span class="o">.</span><span class="n">lower_setattr_generic</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">ClassInstanceType</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">set_attr_impl</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic setattr() for @jitclass instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">typ</span><span class="p">,</span> <span class="n">valty</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">args</span>
+    <span class="n">target</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="n">args</span>
+
+    <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">typ</span><span class="o">.</span><span class="n">struct</span><span class="p">:</span>
+        <span class="c1"># It&#39;s a struct member</span>
+        <span class="n">inst</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">make_helper</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">typ</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">data_ptr</span> <span class="o">=</span> <span class="n">inst</span><span class="o">.</span><span class="n">data</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">make_data_helper</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">typ</span><span class="o">.</span><span class="n">get_data_type</span><span class="p">(),</span>
+                                        <span class="n">ref</span><span class="o">=</span><span class="n">data_ptr</span><span class="p">)</span>
+
+        <span class="c1"># Get old value</span>
+        <span class="n">attr_type</span> <span class="o">=</span> <span class="n">typ</span><span class="o">.</span><span class="n">struct</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span>
+        <span class="n">oldvalue</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">_mangle_attr</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
+
+        <span class="c1"># Store n</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">_mangle_attr</span><span class="p">(</span><span class="n">attr</span><span class="p">),</span> <span class="n">val</span><span class="p">)</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">nrt</span><span class="o">.</span><span class="n">incref</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">attr_type</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+        <span class="c1"># Delete old value</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">nrt</span><span class="o">.</span><span class="n">decref</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">attr_type</span><span class="p">,</span> <span class="n">oldvalue</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">typ</span><span class="o">.</span><span class="n">jit_props</span><span class="p">:</span>
+        <span class="c1"># It&#39;s a jitted property</span>
+        <span class="n">setter</span> <span class="o">=</span> <span class="n">typ</span><span class="o">.</span><span class="n">jit_props</span><span class="p">[</span><span class="n">attr</span><span class="p">][</span><span class="s1">&#39;set&#39;</span><span class="p">]</span>
+        <span class="n">disp_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Dispatcher</span><span class="p">(</span><span class="n">setter</span><span class="p">)</span>
+        <span class="n">sig</span> <span class="o">=</span> <span class="n">disp_type</span><span class="o">.</span><span class="n">get_call_type</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">typing_context</span><span class="p">,</span>
+                                      <span class="p">(</span><span class="n">typ</span><span class="p">,</span> <span class="n">valty</span><span class="p">),</span> <span class="p">{})</span>
+        <span class="n">call</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_function</span><span class="p">(</span><span class="n">disp_type</span><span class="p">,</span> <span class="n">sig</span><span class="p">)</span>
+        <span class="n">call</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+        <span class="n">_add_linking_libs</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">call</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s1">&#39;attribute </span><span class="si">{0!r}</span><span class="s1"> not implemented&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">imp_dtor</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">instance_type</span><span class="p">):</span>
+    <span class="n">llvoidptr</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_value_type</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">voidptr</span><span class="p">)</span>
+    <span class="n">llsize</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_value_type</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uintp</span><span class="p">)</span>
+    <span class="n">dtor_ftype</span> <span class="o">=</span> <span class="n">llvmir</span><span class="o">.</span><span class="n">FunctionType</span><span class="p">(</span><span class="n">llvmir</span><span class="o">.</span><span class="n">VoidType</span><span class="p">(),</span>
+                                     <span class="p">[</span><span class="n">llvoidptr</span><span class="p">,</span> <span class="n">llsize</span><span class="p">,</span> <span class="n">llvoidptr</span><span class="p">])</span>
+
+    <span class="n">fname</span> <span class="o">=</span> <span class="s2">&quot;_Dtor.</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">instance_type</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">dtor_fn</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">get_or_insert_function</span><span class="p">(</span><span class="n">dtor_ftype</span><span class="p">,</span>
+                                            <span class="n">name</span><span class="o">=</span><span class="n">fname</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dtor_fn</span><span class="o">.</span><span class="n">is_declaration</span><span class="p">:</span>
+        <span class="c1"># Define</span>
+        <span class="n">builder</span> <span class="o">=</span> <span class="n">llvmir</span><span class="o">.</span><span class="n">IRBuilder</span><span class="p">(</span><span class="n">dtor_fn</span><span class="o">.</span><span class="n">append_basic_block</span><span class="p">())</span>
+
+        <span class="n">alloc_fe_type</span> <span class="o">=</span> <span class="n">instance_type</span><span class="o">.</span><span class="n">get_data_type</span><span class="p">()</span>
+        <span class="n">alloc_type</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_value_type</span><span class="p">(</span><span class="n">alloc_fe_type</span><span class="p">)</span>
+
+        <span class="n">ptr</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">bitcast</span><span class="p">(</span><span class="n">dtor_fn</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">alloc_type</span><span class="o">.</span><span class="n">as_pointer</span><span class="p">())</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">make_helper</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">alloc_fe_type</span><span class="p">,</span> <span class="n">ref</span><span class="o">=</span><span class="n">ptr</span><span class="p">)</span>
+
+        <span class="n">context</span><span class="o">.</span><span class="n">nrt</span><span class="o">.</span><span class="n">decref</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">alloc_fe_type</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">_getvalue</span><span class="p">())</span>
+
+        <span class="n">builder</span><span class="o">.</span><span class="n">ret_void</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">dtor_fn</span>
+
+
+<span class="nd">@ClassBuilder</span><span class="o">.</span><span class="n">class_impl_registry</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">ClassType</span><span class="p">,</span>
+                                        <span class="n">types</span><span class="o">.</span><span class="n">VarArg</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">Any</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">ctor_impl</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">sig</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generic constructor (__new__) for jitclasses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Allocate the instance</span>
+    <span class="n">inst_typ</span> <span class="o">=</span> <span class="n">sig</span><span class="o">.</span><span class="n">return_type</span>
+    <span class="n">alloc_type</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_data_type</span><span class="p">(</span><span class="n">inst_typ</span><span class="o">.</span><span class="n">get_data_type</span><span class="p">())</span>
+    <span class="n">alloc_size</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_abi_sizeof</span><span class="p">(</span><span class="n">alloc_type</span><span class="p">)</span>
+
+    <span class="n">meminfo</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">nrt</span><span class="o">.</span><span class="n">meminfo_alloc_dtor</span><span class="p">(</span>
+        <span class="n">builder</span><span class="p">,</span>
+        <span class="n">context</span><span class="o">.</span><span class="n">get_constant</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uintp</span><span class="p">,</span> <span class="n">alloc_size</span><span class="p">),</span>
+        <span class="n">imp_dtor</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">builder</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">inst_typ</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">data_pointer</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">nrt</span><span class="o">.</span><span class="n">meminfo_data</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">meminfo</span><span class="p">)</span>
+    <span class="n">data_pointer</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">bitcast</span><span class="p">(</span><span class="n">data_pointer</span><span class="p">,</span>
+                                   <span class="n">alloc_type</span><span class="o">.</span><span class="n">as_pointer</span><span class="p">())</span>
+
+    <span class="c1"># Nullify all data</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">store</span><span class="p">(</span><span class="n">cgutils</span><span class="o">.</span><span class="n">get_null_value</span><span class="p">(</span><span class="n">alloc_type</span><span class="p">),</span>
+                  <span class="n">data_pointer</span><span class="p">)</span>
+
+    <span class="n">inst_struct</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">make_helper</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">inst_typ</span><span class="p">)</span>
+    <span class="n">inst_struct</span><span class="o">.</span><span class="n">meminfo</span> <span class="o">=</span> <span class="n">meminfo</span>
+    <span class="n">inst_struct</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">data_pointer</span>
+
+    <span class="c1"># Call the jitted __init__</span>
+    <span class="c1"># TODO: extract the following into a common util</span>
+    <span class="n">init_sig</span> <span class="o">=</span> <span class="p">(</span><span class="n">sig</span><span class="o">.</span><span class="n">return_type</span><span class="p">,)</span> <span class="o">+</span> <span class="n">sig</span><span class="o">.</span><span class="n">args</span>
+
+    <span class="n">init</span> <span class="o">=</span> <span class="n">inst_typ</span><span class="o">.</span><span class="n">jit_methods</span><span class="p">[</span><span class="s1">&#39;__init__&#39;</span><span class="p">]</span>
+    <span class="n">disp_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">Dispatcher</span><span class="p">(</span><span class="n">init</span><span class="p">)</span>
+    <span class="n">call</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">get_function</span><span class="p">(</span><span class="n">disp_type</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">void</span><span class="p">(</span><span class="o">*</span><span class="n">init_sig</span><span class="p">))</span>
+    <span class="n">_add_linking_libs</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">call</span><span class="p">)</span>
+    <span class="n">realargs</span> <span class="o">=</span> <span class="p">[</span><span class="n">inst_struct</span><span class="o">.</span><span class="n">_getvalue</span><span class="p">()]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">call</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">realargs</span><span class="p">)</span>
+
+    <span class="c1"># Prepare return value</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">inst_struct</span><span class="o">.</span><span class="n">_getvalue</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">imputils</span><span class="o">.</span><span class="n">impl_ret_new_ref</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">builder</span><span class="p">,</span> <span class="n">inst_typ</span><span class="p">,</span> <span class="n">ret</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Yassine Laguel
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

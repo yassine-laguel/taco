@@ -17,29 +17,19 @@ class Oracle:
     r"""Base class that instantiates a first-order oracle for the DC objective of the penalized chance constaint
 
         For two input oracles :math:`f` and :math:`g` given through their function and gradients, and a
-        sampled dataset from a random variable :math:'\xi', this class is an interface to compute the value
+        sampled dataset from a random variable :math:`\xi`, this class is an interface to compute the value
         and the gradient of the function
-        :math:`x, \eta mapsto \mapsto f(x) + \mu \max(\eta,0) + \lambda (G(x,\eta) - \bar Q_p(g(x,\xi))`
+        :math:`x, \eta \mapsto f(x) + \mu \max(\eta,0) + \lambda \left(G(x,\eta) - \text{CVaR}_p(g(x,\xi))\right)`
         where :math:`G(x, \eta) = \eta + \frac{1}{1-p} \mathbb{E}[\max(g(x, \xi) - \eta]`
+
+        :param problem: Instance of Problem
+        :param ``np.float64`` p: Real number in [0,1]. Safety probability level
+        :param ``np.float64`` pen1: Penalization parameter, must be positive.
+        :param ``np.float64`` pen2: Penalization parameter, must be positive.
+        :param ``np.float64`` rho: Smoothing parameter for the superquantile, must be positive.
     """
 
     def __init__(self, problem, p, pen1, pen2, rho):
-        """
-
-        :param problem: Instance of Problem
-
-        :type p : np.float64
-        :param p: Real number in [0,1]. Safety probability level
-
-        :type pen1 : np.float64
-        :param pen1: Penalization parameter > 0
-
-        :type pen2 : np.float64
-        :param pen2: Penalization parameter > 0
-
-        :type rho : np.float64
-        :param rho: Smoothing parameter for the superquantile
-        """
 
         self.problem = problem
 
@@ -54,17 +44,17 @@ class Oracle:
     ####################################################################################
 
     def f(self, x):
-        """Value of the DC objective`
+        """Value of the DC objective
         """
         return self.f1(x) - self.f2(x)
 
     def f1(self, x):
-        """Value of the convex part of the DC objective`
+        """Value of the convex part of the DC objective :math:`x, \eta \mapsto f(x) + \mu \max(\eta,0) + \lambda G(x,\eta)`
         """
         return self.objective_func(x[:-1]) + self.pen1 * max(x[-1], 0.0) + self.pen2 * self._G_func(x)
 
     def g1(self, x):
-        """Gradient of the convex part of the DC objective`
+        """Gradient of the convex part of the DC objective :math:`x, \eta \mapsto f(x) + \mu \max(\eta,0) + \lambda G(x,\eta)`
         """
         res = self.pen2 * self._G_grad(x)
         res[-1] += (x[-1] > 0) * self.pen1
@@ -72,13 +62,13 @@ class Oracle:
         return res
 
     def f2(self, x):
-        """Value of the convave part of the DC objective`
+        """Value of the concave part of the DC objective :math:`x, \eta \mapsto - {CVaR}_p(g(x,{\\xi}))`
         """
         f, _ = self._smooth_superquantile(x, self.problem.data)
         return self.pen2 * f
 
     def g2(self, x):
-        """Gradient of the convave part of the DC objective`
+        """Gradient of the concave part of the DC objective :math:`x, \eta \mapsto - {CVaR}_p(g(x,{\\xi}))`
         """
         res = np.zeros_like(x, dtype=np.float64)
         _, g = self._smooth_superquantile(x, self.problem.data)
@@ -308,29 +298,56 @@ spec = [
 ]
 
 
+@njit
+def _fast_projection(u, p, rho):
+
+    n = len(u)
+    c = 1.0 / (n * (1 - p))
+    v = u + (2.0 * rho / n) * np.ones(n, dtype=np.float64)
+
+    # sorts the coordinate of v
+    sorted_index = np.argsort(v)
+
+    # finds the zero of the function theta prime
+    lmbda = _fast_find_lmbda(v, sorted_index, p, rho)
+
+    # instantiate the output
+    res = np.zeros(n, dtype=np.float64)
+
+    # fills the coordinate of the output
+    counter = n - 1
+    while counter >= 0:
+        if lmbda > v[sorted_index[counter]]:
+            break
+        elif lmbda > v[sorted_index[counter]] - 2 * rho * c:
+            res[sorted_index[counter]] = (v[sorted_index[counter]] - lmbda) / (2 * rho)
+        else:
+            res[sorted_index[counter]] = c
+        counter -= 1
+
+    return res
+
+
+####################################################################################
+# FAST Routines
+####################################################################################
+
 @jitclass(spec)
 class FastOracle:
-    r"""Base class that instantiates a first-order oracle for the DC objective of the penalized chance constaint
+    r"""Numba version of the class Oracle.
 
+        FastOracle works with numba in full no-python mode. It must take as an input an instance of problem
+        that is a jitclass.
+
+        :param problem: Instance of Problem. Must be a numba jitclass.
+        :param ``np.float64`` p: Real number in [0,1]. Safety probability level
+        :param ``np.float64`` pen1: Penalization parameter, must be positive.
+        :param ``np.float64`` pen2: Penalization parameter, must be positive.
+        :param ``np.float64`` rho: Smoothing parameter for the superquantile, must be positive.
     """
 
     def __init__(self, problem, p, pen1, pen2, rho):
-        """
 
-                :param problem: Instance of Problem
-
-                :type p : np.float64
-                :param p: Real number in [0,1]. Safety probability level
-
-                :type pen1 : np.float64
-                :param pen1: Penalization parameter > 0
-
-                :type pen2 : np.float64
-                :param pen2: Penalization parameter > 0
-
-                :type rho : np.float64
-                :param rho: Smoothing parameter for the superquantile
-                """
         self.problem = problem
 
         self.p = p
@@ -344,17 +361,17 @@ class FastOracle:
     ####################################################################################
 
     def f(self, x):
-        """Value of the DC objective`
+        """Value of the DC objective
         """
         return self.f1(x) - self.f2(x)
 
     def f1(self, x):
-        """Value of the convex part of the DC objective`
+        """Value of the convex part of the DC objective
         """
         return self.objective_func(x[:-1]) + self.pen1 * max(x[-1], 0.0) + self.pen2 * self._G_func(x)
 
     def g1(self, x):
-        """Gradient of the convex part of the DC objective`
+        """Gradient of the convex part of the DC objective
         """
         res = self.pen2 * self._G_grad(x)
         res[-1] += (x[-1] > 0) * self.pen1
@@ -362,13 +379,13 @@ class FastOracle:
         return res
 
     def f2(self, x):
-        """Value of the convave part of the DC objective`
+        """Value of the convave part of the DC objective
         """
         f, _ = self._smooth_superquantile(x, self.problem.data)
         return self.pen2 * f
 
     def g2(self, x):
-        """Gradient of the convave part of the DC objective`
+        """Gradient of the convave part of the DC objective
         """
         res = np.zeros_like(x, dtype=np.float64)
         _, g = self._smooth_superquantile(x, self.problem.data)
@@ -503,40 +520,6 @@ class FastOracle:
 
     def constraint_grad(self, x, z):
         return self.problem.constraint_grad(x, z)
-
-
-####################################################################################
-# FAST Routines
-####################################################################################
-
-@njit
-def _fast_projection(u, p, rho):
-
-    n = len(u)
-    c = 1.0 / (n * (1 - p))
-    v = u + (2.0 * rho / n) * np.ones(n, dtype=np.float64)
-
-    # sorts the coordinate of v
-    sorted_index = np.argsort(v)
-
-    # finds the zero of the function theta prime
-    lmbda = _fast_find_lmbda(v, sorted_index, p, rho)
-
-    # instantiate the output
-    res = np.zeros(n, dtype=np.float64)
-
-    # fills the coordinate of the output
-    counter = n - 1
-    while counter >= 0:
-        if lmbda > v[sorted_index[counter]]:
-            break
-        elif lmbda > v[sorted_index[counter]] - 2 * rho * c:
-            res[sorted_index[counter]] = (v[sorted_index[counter]] - lmbda) / (2 * rho)
-        else:
-            res[sorted_index[counter]] = c
-        counter -= 1
-
-    return res
 
 
 @njit

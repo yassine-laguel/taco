@@ -1,0 +1,263 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Taco &mdash; Taco 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="start.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="#" class="icon icon-home" alt="Documentation Home"> Taco
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="start.html"> Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="optim_framework.html"> The Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="oracles.html"> The Oracles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bundle.html"> The Bundle Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="problems.html"> The Problems</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">Taco</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="#" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Taco</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="taco">
+<h1>Taco<a class="headerlink" href="#taco" title="Permalink to this headline">¶</a></h1>
+<p>Taco is a python toolbox aimed at solving chance-constrained problems. For more details, we refer to our companion paper (to appear very soon!).</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>This toolbox is aimed at solving optimization problems of the form:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\left\{
+    \begin{array}{ll}
+    \min_{x \in \mathbb{R}^d} &amp; f(x)  \\
+     \text{ s.t. } &amp; \mathbb{P}[g(x, \xi) \leq 0] \geq p
+    \end{array}
+\right.\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(f:\mathbb{R}^d \mapsto \mathbb{R}\)</span> and <span class="math notranslate nohighlight">\(g:\mathbb{R}^d \times \mathbb{R}^m \mapsto \mathbb{R}\)</span> are two functions provided by the user together with a dataset <span class="math notranslate nohighlight">\(D\)</span> from which <span class="math notranslate nohighlight">\(\xi:\Omega \rightarrow \mathbb{R}^m\)</span> is sampled. Taco implements a penalization procedure based on a bilevel reformulation of the above problem. Each penalized problem turns out to be a Difference of Convex problem that we solve with a recent <a class="reference external" href="https://link.springer.com/article/10.1007/s10898-019-00755-4">bundle procedure</a>.</p>
+<p style="text-align:center;">
+    <figure style="text-align:center;vertical-align: middle;">
+        <img src="images/toy_pb.gif" alt="centered image" width="400" />
+        <figcaption style="text-align:center;">  <font size="-1"> Example of solving for a quadratic toy problem (see the companion paper) <br> The non-convex red region delimited by the black dashed-line is the chance constraint. <br> The blue oval shapes are the contour lines of the objective function.</font></figcaption>
+    </figure>
+</p><p>Taco routines rely on just-in-time compilation supported by <a class="reference external" href="https://numba.pydata.org">Numba</a>. The routines are optimized to provide fast performances on reasonably large datasets.</p>
+</div>
+<div class="section" id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="start.html"> Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="start.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start.html#general-usage">General Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="start.html#simple-case-demo">Simple Case Demo</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="optim_framework.html"> The Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="oracles.html"> The Oracles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="bundle.html"> The Bundle Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="problems.html"> The Problems</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="problems.html#standard-implementation">Standard Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="problems.html#numba-compliant-implementation">Numba compliant Implementation</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="authors">
+<h2>Authors<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://yassine-laguel.github.io">Yassine Laguel</a></p></li>
+<li><p><a class="reference external" href="https://ljk.imag.fr/membres/Jerome.Malick/">Jerome Malick</a></p></li>
+<li><p><a class="reference external" href="https://www.researchgate.net/profile/Wim_Ackooij">Wim Van Ackooij</a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="start.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Yassine Laguel
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

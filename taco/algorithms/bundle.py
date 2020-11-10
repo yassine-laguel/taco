@@ -13,21 +13,17 @@ from numba import njit
 
 
 class BundleAlgorithm:
-    """ Base class that combines a penalization procedure with the Bundle Method [1] to solve
+    """ Base class that combines the penalization procedure with a Bundle Method to solve
         the chance constraint problem. It is instantiated with a first-oder oracle for the DC objective and a
-        dictionnary of parameters, this class is aimed at running a bundle method to minimize the DC objective.
-        From time to time, the penalization parameters are increased to escape some critical point of the DC
-        objective.
+        dictionary of parameters. From time to time, the penalization parameters are increased to escape some
+        critical point of the DC objective.
 
+        :param oracle: An oracle object.
+        :param  params: Python dictionary of parameters.
+        :type params: dict
     """
 
     def __init__(self, oracle, params):
-        """
-
-        :param oracle: An oracle object.
-        :param params: Python dictionary of parameters.
-        """
-        # First order Oracle for the DC problem
         self.oracle = oracle
 
         # Counter and Current Iterate
@@ -56,7 +52,7 @@ class BundleAlgorithm:
         self.kappa = params['bund_kappa']
         self.mu_low = params['bund_mu_low']
         self.mu_high = params['bund_mu_high']
-        self.starting_mu = params['bund_starting_mu']
+        self.starting_mu = params['bund_mu_start']
         self.mu = self.starting_mu
         self.delta_tol = params['bund_delta_tol']
         self.scaling_term = params['bund_scaling_term']
@@ -66,10 +62,10 @@ class BundleAlgorithm:
 
         # Restarting constants
         self.restarting_period = params['bund_restarting_period']
-        self.restarting_mu = params['bund_restarting_mu']
+        self.restarting_mu = params['bund_mu_restart']
         self.restarting_penalty_slack = params['bund_restarting_penalty_slack']
         self.restarting_epsilon_eta = params['bund_restarting_epsilon_eta']
-        self.restarting_factor_pen = params['bund_restarting_factor_pen']
+        self.restarting_factor_pen = params['pen2_factor']
 
         # Logging Tools
         self.verbose = None
@@ -80,8 +76,7 @@ class BundleAlgorithm:
         self.lst_serious_steps = np.zeros(self.nb_iterations, dtype=np.float64)
 
     def run(self, verbose=False):
-        """
-            Runs the optimization process
+        """ Runs the optimization process
         :type verbose: bool
         :param verbose: If true, prints advance of the process in the console
         :return: solution of the problem

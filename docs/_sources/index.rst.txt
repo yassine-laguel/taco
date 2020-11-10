@@ -1,0 +1,51 @@
+Taco
+====
+
+Taco is a python toolbox aimed at solving chance-constrained problems. For more details, we refer to our companion paper (to appear very soon!).
+
+Overview
+--------
+
+This toolbox is aimed at solving optimization problems of the form:
+
+.. math::
+    \left\{
+        \begin{array}{ll}
+        \min_{x \in \mathbb{R}^d} & f(x)  \\
+         \text{ s.t. } & \mathbb{P}[g(x, \xi) \leq 0] \geq p
+        \end{array}
+    \right.
+
+where :math:`f:\mathbb{R}^d \mapsto \mathbb{R}` and :math:`g:\mathbb{R}^d \times \mathbb{R}^m \mapsto \mathbb{R}` are two functions provided by the user together with a dataset :math:`D` from which :math:`\xi:\Omega \rightarrow \mathbb{R}^m` is sampled. Taco implements a penalization procedure based on a bilevel reformulation of the above problem. Each penalized problem turns out to be a Difference of Convex problem that we solve with a recent `bundle procedure <https://link.springer.com/article/10.1007/s10898-019-00755-4>`_.
+
+.. raw:: html
+
+    <p style="text-align:center;">
+        <figure style="text-align:center;vertical-align: middle;">
+            <img src="images/toy_pb.gif" alt="centered image" width="400" />
+            <figcaption style="text-align:center;">  <font size="-1"> Example of solving for a quadratic toy problem (see the companion paper) <br> The non-convex red region delimited by the black dashed-line is the chance constraint. <br> The blue oval shapes are the contour lines of the objective function.</font></figcaption>
+        </figure>
+    </p>
+
+Taco routines rely on just-in-time compilation supported by `Numba <https://numba.pydata.org>`_. The routines are optimized to provide fast performances on reasonably large datasets.
+
+
+Table of Contents
+-----------------
+.. toctree::
+    :caption: Table of Contents
+   :maxdepth: 2
+
+    Getting Started <start.rst>
+    The Optimization Framework <optim_framework.rst>
+    The Oracles <oracles.rst>
+    The Bundle Method <bundle.rst>
+    The Problems <problems.rst>
+
+
+
+Authors
+-------
+* `Yassine Laguel <https://yassine-laguel.github.io>`_
+* `Jerome Malick <https://ljk.imag.fr/membres/Jerome.Malick/>`_
+* `Wim Van Ackooij <https://www.researchgate.net/profile/Wim_Ackooij>`_

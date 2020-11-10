@@ -1,0 +1,7 @@
+taco
+====
+
+.. toctree::
+   :maxdepth: 4
+
+   taco

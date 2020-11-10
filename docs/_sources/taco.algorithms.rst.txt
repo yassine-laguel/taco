@@ -1,0 +1,21 @@
+taco.algorithms package
+=======================
+
+Submodules
+----------
+
+taco.algorithms.bundle module
+-----------------------------
+
+.. automodule:: taco.algorithms.bundle
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: taco.algorithms
+   :members:
+   :undoc-members:
+   :show-inheritance:

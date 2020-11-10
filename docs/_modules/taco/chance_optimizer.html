@@ -1,0 +1,323 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>taco.chance_optimizer &mdash; Taco 1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> Taco
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../start.html"> Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optim_framework.html"> The Optimization Framework</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../oracles.html"> The Oracles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../bundle.html"> The Bundle Method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../problems.html"> The Problems</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Taco</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>taco.chance_optimizer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for taco.chance_optimizer</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: chance_optimizer.rst</span>
+<span class="sd">   :synopsis: Module which encapsulates the optimization procedure</span>
+
+<span class="sd">.. moduleauthor:: Yassine LAGUEL &lt;first-name DOT last-name AT univ-grenoble-alpes DOT fr&gt;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">.oracle</span> <span class="kn">import</span> <span class="n">Oracle</span><span class="p">,</span> <span class="n">FastOracle</span>
+<span class="kn">from</span> <span class="nn">.algorithms.bundle</span> <span class="kn">import</span> <span class="n">BundleAlgorithm</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+
+<div class="viewcode-block" id="Optimizer"><a class="viewcode-back" href="../../taco.html#taco.Optimizer">[docs]</a><span class="k">class</span> <span class="nc">Optimizer</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Base class for optimization of chance constrained problems</span>
+
+<span class="sd">        For an problem instance providing a dataset and two first order oracles :math:`f` and :math:`g`, this class</span>
+<span class="sd">        is an interface for solving the minimization problem</span>
+
+<span class="sd">        :param problem: An instance of Problem</span>
+<span class="sd">        :param ``np.float64`` p: Safety probability threshold for the problem</span>
+<span class="sd">        :param ``np.ndarray`` starting_point: (optional) Starting point for the algorithm</span>
+<span class="sd">        :param ``np.float64`` pen1: (optional) First Penalization parameter</span>
+<span class="sd">        :param ``np.float64`` pen2: (optional) Second Penalization parameter</span>
+<span class="sd">        :param ``np.float64`` factor_pen2: (optional) Incremental factor for the second penalization parameter pen2</span>
+<span class="sd">        :param ``np.float64`` bund_mu_start: Starting value for the proximal parameter :math:`\mu` of the bundle method</span>
+<span class="sd">        :param ``bool``  numba: If True, instantiate an Oracle with numba in ``no-python`` mode.</span>
+<span class="sd">        :param ``bool``  performance_warning: If True, prints numba performance warnings.</span>
+<span class="sd">        :param ``dict`` params: Dictionnary of parameters for the optimization process</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">starting_point</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span> <span class="n">pen1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pen2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">factor_pen2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bund_mu_start</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">performance_warnings</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">numba</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_treat_params</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">starting_point</span><span class="p">,</span> <span class="n">pen1</span><span class="p">,</span> <span class="n">pen2</span><span class="p">,</span> <span class="n">factor_pen2</span><span class="p">,</span> <span class="n">bund_mu_start</span><span class="p">,</span>
+                                         <span class="n">performance_warnings</span><span class="p">,</span> <span class="n">numba</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;performance_warnings&#39;</span><span class="p">]:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;NUMBA_DISABLE_PERFORMANCE_WARNINGS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">problem</span> <span class="o">=</span> <span class="n">problem</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oracle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instantiate_oracle</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_instantiate_algorithm</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solution</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="Optimizer.run"><a class="viewcode-back" href="../../taco.html#taco.Optimizer.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Runs the bundle method to solve the chance constrained problem.</span>
+
+<span class="sd">        :param ``bool`` verbose: If true, prints advance of the process in the console</span>
+<span class="sd">        :return: solution of the problem</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solution</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">algorithm</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">solution</span></div>
+
+    <span class="k">def</span> <span class="nf">_treat_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">starting_point</span><span class="p">,</span> <span class="n">pen1</span><span class="p">,</span> <span class="n">pen2</span><span class="p">,</span> <span class="n">factor_pen2</span><span class="p">,</span> <span class="n">bund_mu_start</span><span class="p">,</span>
+                 <span class="n">performance_warnings</span><span class="p">,</span> <span class="n">numba</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+
+        <span class="n">arguments</span> <span class="o">=</span> <span class="nb">locals</span><span class="p">()</span>
+
+        <span class="k">del</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;self&#39;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">arguments</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_params</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">given_parameter</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">arguments</span><span class="p">[</span><span class="n">given_parameter</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">res</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">given_parameter</span><span class="p">)]</span> <span class="o">=</span> <span class="n">arguments</span><span class="p">[</span><span class="n">given_parameter</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">res</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_create_params</span><span class="p">():</span>
+
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;p&#39;</span><span class="p">:</span> <span class="mf">0.03368421</span><span class="p">,</span>
+            <span class="s1">&#39;nb_iterations&#39;</span><span class="p">:</span> <span class="mi">150</span><span class="p">,</span>
+            <span class="s1">&#39;starting_point&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.25</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+
+            <span class="s1">&#39;pen1&#39;</span><span class="p">:</span> <span class="mf">100.</span><span class="p">,</span>
+            <span class="s1">&#39;pen2&#39;</span><span class="p">:</span> <span class="mf">30.</span><span class="p">,</span>
+            <span class="s1">&#39;pen2_factor&#39;</span><span class="p">:</span> <span class="mf">1.25</span><span class="p">,</span>
+
+            <span class="s1">&#39;bund_kappa&#39;</span><span class="p">:</span> <span class="mf">0.00001</span><span class="p">,</span>
+            <span class="s1">&#39;bund_mu_start&#39;</span><span class="p">:</span> <span class="mf">50.0</span><span class="p">,</span>  <span class="c1"># 50 working in about 20 iterations</span>
+            <span class="s1">&#39;bund_mu_low&#39;</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">,</span>
+            <span class="s1">&#39;bund_mu_high&#39;</span><span class="p">:</span> <span class="mf">1000.0</span><span class="p">,</span>
+            <span class="s1">&#39;bund_delta_tol&#39;</span><span class="p">:</span> <span class="mf">0.0000001</span><span class="p">,</span>
+            <span class="s1">&#39;bund_scaling_term&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+            <span class="s1">&#39;bund_restarting_period&#39;</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span>
+            <span class="s1">&#39;bund_mu_restart&#39;</span><span class="p">:</span> <span class="mf">50.0</span><span class="p">,</span>  <span class="c1"># 50 working in about 20 iterations</span>
+            <span class="s1">&#39;bund_mu_inc&#39;</span><span class="p">:</span> <span class="mf">1.5</span><span class="p">,</span>  <span class="c1"># 1.5</span>
+            <span class="s1">&#39;bund_mu_dec&#39;</span><span class="p">:</span> <span class="mf">0.66</span><span class="p">,</span>  <span class="c1"># 0.66</span>
+            <span class="s1">&#39;bund_epsilon_alpha&#39;</span><span class="p">:</span> <span class="mf">0.01</span><span class="p">,</span>
+            <span class="s1">&#39;bund_max_size_bundle_set&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+
+            <span class="s1">&#39;bund_restarting_penalty_slack&#39;</span><span class="p">:</span> <span class="mf">0.00001</span><span class="p">,</span>
+            <span class="s1">&#39;bund_restarting_epsilon_eta&#39;</span><span class="p">:</span> <span class="mf">0.0001</span><span class="p">,</span>
+            <span class="s1">&#39;superquantile_smoothing_param&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span>
+            <span class="s1">&#39;numba&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">params</span>
+
+    <span class="k">def</span> <span class="nf">_instantiate_oracle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;p&#39;</span><span class="p">]</span>
+        <span class="n">pen1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;pen1&#39;</span><span class="p">]</span>
+        <span class="n">pen2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;pen2&#39;</span><span class="p">]</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;superquantile_smoothing_param&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">[</span><span class="s1">&#39;numba&#39;</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="n">FastOracle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">pen1</span><span class="p">,</span> <span class="n">pen2</span><span class="p">,</span> <span class="n">rho</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Oracle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">pen1</span><span class="p">,</span> <span class="n">pen2</span><span class="p">,</span> <span class="n">rho</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_instantiate_algorithm</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="n">BundleAlgorithm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oracle</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">params</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Yassine Laguel
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
