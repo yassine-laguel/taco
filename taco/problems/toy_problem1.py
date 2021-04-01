@@ -14,11 +14,11 @@ spec = [
 
 
 @jitclass(spec)
-class ToyProblem:
+class ToyProblem1:
 
     def __init__(self, data):
 
-        self.a = np.array([2.0, 2.0], dtype=np.float64)
+        self.a = np.array([3.0, 3.0], dtype=np.float64)
         self.data = data
 
         r = np.sqrt(2)/2
