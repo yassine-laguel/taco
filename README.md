@@ -15,9 +15,10 @@ This project is licensed under the GPLv3 License - see the [LICENSE.md](LICENSE.
 ## Cite
 If you found this package useful, please cite the following work.
 ```
-@inproceedings{laguel-etal:taco:2020,
-  title={A Data-driven approach for chance constrained problems},
-  author={Laguel, Yassine and Malick, Jérôme and Van Ackooij, Wim},
-  year={2020},
+@article{laguel2021chance,
+  title={Chance constrained problems: a bilevel convex optimization perspective},
+  author={Laguel, Yassine and Malick, J{\'e}r{\^o}me and Ackooij, Wim},
+  journal={arXiv preprint arXiv:2103.10832},
+  year={2021}
 }
 ```
