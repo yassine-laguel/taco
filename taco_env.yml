@@ -1,0 +1,8 @@
+name: taco_env
+dependencies:
+- python=3.6
+- pip
+- pip:
+        - cvxopt
+        - numpy
+        - numba
