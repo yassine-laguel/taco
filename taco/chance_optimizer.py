@@ -43,14 +43,14 @@ class Optimizer:
         self.algorithm = self._instantiate_algorithm()
         self.solution = None
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, logs=False):
         """
             Runs the bundle method to solve the chance constrained problem.
 
         :param ``bool`` verbose: If true, prints advance of the process in the console
         :return: solution of the problem
         """
-        self.solution = self.algorithm.run(verbose=verbose)
+        self.solution = self.algorithm.run(verbose=verbose, logs=logs)
         return self.solution
 
     def _treat_params(self, p, starting_point, pen1, pen2, factor_pen2, bund_mu_start,
@@ -63,13 +63,13 @@ class Optimizer:
 
         res = self._create_params()
 
-        if params is not None:
-            for key in params:
-                res[key] = params[key]
-
         for given_parameter in arguments:
             if arguments[given_parameter] is not None:
                 res[str(given_parameter)] = arguments[given_parameter]
+
+        if params is not None:
+            for key in params:
+                res[key] = params[key]
 
         return res
 

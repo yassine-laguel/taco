@@ -8,6 +8,7 @@
 import numpy as np
 # TODO : Put imports in init file and add licence everywhere
 from .problems.toy_problem import ToyProblem
+from .problems.toy_problem2 import ToyProblem2
 from numba.experimental import jitclass
 from numba import int32, float64
 from numba import njit
@@ -85,7 +86,6 @@ class Oracle:
         return x[-1] + np.mean(vec_g_values) / (1.0 - self.p)
 
     def _G_grad(self, x):
-        # return _dyn_G_grad(x, self.constraint_func, self.constraint_grad, self.problem.data, self.sample_size, self.p)
         res = np.zeros_like(x, dtype=np.float64)
         vec_func_values = np.zeros(self.sample_size, dtype=np.float64)
         for ii in range(self.sample_size):
@@ -97,24 +97,25 @@ class Oracle:
             vec_grad_values_above_eta[ii] = \
                 self.constraint_grad(x[:-1], self.problem.data[indices_values_above_eta[ii]])
 
-        indices_values_equal_eta = np.where(vec_func_values == x[-1])[0]
+        # indices_values_equal_eta = np.where(vec_func_values == x[-1])[0]
 
         res_x = np.sum(vec_grad_values_above_eta, axis=0) / (self.sample_size * (1.0 - self.p))
         res_eta = 1.0 - len(indices_values_above_eta) / (self.sample_size * (1.0 - self.p))
 
-        if len(indices_values_equal_eta) > 0:
-            vec_grad_values_equal_eta = np.zeros((len(indices_values_equal_eta), len(x) - 1), dtype=np.float64)
-            for ii in range(len(indices_values_equal_eta)):
-                vec_grad_values_equal_eta[ii] = \
-                    self.constraint_grad(x[:-1], self.problem.data[indices_values_equal_eta[ii]])
-            alpha = (self.sample_size * (1 - self.p) - len(indices_values_above_eta)) / (len(indices_values_equal_eta))
-            if alpha < 0 or alpha > 1.0:
-                if x[-1] >= 0:
-                    alpha = 0.0
-                else:
-                    alpha = 1.0
-            res_x = res_x + alpha * np.sum(vec_grad_values_equal_eta, axis=0) / (self.sample_size * (1.0 - self.p))
-            res_eta = res_eta - alpha * len(indices_values_equal_eta) / (self.sample_size * (1.0 - self.p))
+        # We choose a simpler subgradient
+        # if len(indices_values_equal_eta) > 0:
+        #     vec_grad_values_equal_eta = np.zeros((len(indices_values_equal_eta), len(x) - 1), dtype=np.float64)
+        #     for ii in range(len(indices_values_equal_eta)):
+        #         vec_grad_values_equal_eta[ii] = \
+        #             self.constraint_grad(x[:-1], self.problem.data[indices_values_equal_eta[ii]])
+        #     alpha = (self.sample_size * (1 - self.p) - len(indices_values_above_eta)) / (len(indices_values_equal_eta))
+        #     if alpha < 0 or alpha > 1.0:
+        #         if x[-1] >= 0:
+        #             alpha = 0.0
+        #         else:
+        #             alpha = 1.0
+        #     res_x = res_x + alpha * np.sum(vec_grad_values_equal_eta, axis=0) / (self.sample_size * (1.0 - self.p))
+        #     res_eta = res_eta - alpha * len(indices_values_equal_eta) / (self.sample_size * (1.0 - self.p))
 
         res[:-1] = res_x
         res[-1] = res_eta
@@ -289,7 +290,7 @@ class Oracle:
 #     return f, g
 
 spec = [
-    ('problem', ToyProblem.class_type.instance_type),               # a jitclass
+    ('problem', ToyProblem2.class_type.instance_type),               # a jitclass
     ('sample_size', int32),               # a simple scalar field
     ('p', float64),               # a simple scalar field
     ('pen1', float64),               # a simple scalar field
@@ -402,7 +403,6 @@ class FastOracle:
         return x[-1] + np.mean(vec_g_values) / (1.0 - self.p)
 
     def _G_grad(self, x):
-        # return _dyn_G_grad(x, self.constraint_func, self.constraint_grad, self.problem.data, self.sample_size, self.p)
         res = np.zeros_like(x, dtype=np.float64)
         vec_func_values = np.zeros(self.sample_size, dtype=np.float64)
         for ii in range(self.sample_size):
@@ -414,24 +414,25 @@ class FastOracle:
             vec_grad_values_above_eta[ii] = \
                 self.constraint_grad(x[:-1], self.problem.data[indices_values_above_eta[ii]])
 
-        indices_values_equal_eta = np.where(vec_func_values == x[-1])[0]
+        # indices_values_equal_eta = np.where(vec_func_values == x[-1])[0]
 
         res_x = np.sum(vec_grad_values_above_eta, axis=0) / (self.sample_size * (1.0 - self.p))
         res_eta = 1.0 - len(indices_values_above_eta) / (self.sample_size * (1.0 - self.p))
 
-        if len(indices_values_equal_eta) > 0:
-            vec_grad_values_equal_eta = np.zeros((len(indices_values_equal_eta), len(x) - 1), dtype=np.float64)
-            for ii in range(len(indices_values_equal_eta)):
-                vec_grad_values_equal_eta[ii] = \
-                    self.constraint_grad(x[:-1], self.problem.data[indices_values_equal_eta[ii]])
-            alpha = (self.sample_size * (1 - self.p) - len(indices_values_above_eta)) / (len(indices_values_equal_eta))
-            if alpha < 0 or alpha > 1.0:
-                if x[-1] >= 0:
-                    alpha = 0.0
-                else:
-                    alpha = 1.0
-            res_x = res_x + alpha * np.sum(vec_grad_values_equal_eta, axis=0) / (self.sample_size * (1.0 - self.p))
-            res_eta = res_eta - alpha * len(indices_values_equal_eta) / (self.sample_size * (1.0 - self.p))
+        # We choose a simpler subgradient
+        # if len(indices_values_equal_eta) > 0:
+        #     vec_grad_values_equal_eta = np.zeros((len(indices_values_equal_eta), len(x) - 1), dtype=np.float64)
+        #     for ii in range(len(indices_values_equal_eta)):
+        #         vec_grad_values_equal_eta[ii] = \
+        #             self.constraint_grad(x[:-1], self.problem.data[indices_values_equal_eta[ii]])
+        #     alpha = (self.sample_size * (1 - self.p) - len(indices_values_above_eta)) / (len(indices_values_equal_eta))
+        #     if alpha < 0 or alpha > 1.0:
+        #         if x[-1] >= 0:
+        #             alpha = 0.0
+        #         else:
+        #             alpha = 1.0
+        #     res_x = res_x + alpha * np.sum(vec_grad_values_equal_eta, axis=0) / (self.sample_size * (1.0 - self.p))
+        #     res_eta = res_eta - alpha * len(indices_values_equal_eta) / (self.sample_size * (1.0 - self.p))
 
         res[:-1] = res_x
         res[-1] = res_eta
@@ -567,54 +568,12 @@ def _fast_theta_prime(lmbda, v, sorted_index, p, rho):
     return res
 
 
-# @njit
-# def _quantile(p, u):
-#     v = np.sort(u)
-#     if p == 0:
-#         return v[0]
-#     else:
-#         n = len(v)
-#         index = int(np.ceil(n * p)) - 1
-#         return v[index]
-
 @njit
 def _quantile(p, u):
+    v = np.sort(u)
     if p == 0:
-        k = 1
+        return v[0]
     else:
-        k = np.ceil(p * len(u))
-    return _quickselect(k, u)
-
-
-@njit
-def _quickselect(k, list_of_numbers):
-    return _kthSmallest(list_of_numbers, k, 0, len(list_of_numbers) - 1)
-
-
-@njit
-def _kthSmallest(arr, k, start, end):
-
-    pivot_index = _partition(arr, start, end)
-
-    if pivot_index - start == k - 1:
-        return arr[pivot_index]
-
-    if pivot_index - start > k - 1:
-        return _kthSmallest(arr, k, start, pivot_index - 1)
-
-    return _kthSmallest(arr, k - pivot_index + start - 1, pivot_index + 1, end)
-
-
-@njit
-def _partition(arr, l, r):
-
-    pivot = arr[r]
-    i = l
-    for j in range(l, r):
-
-        if arr[j] <= pivot:
-            arr[i], arr[j] = arr[j], arr[i]
-            i += 1
-
-    arr[i], arr[r] = arr[r], arr[i]
-    return i
+        n = len(v)
+        index = int(np.ceil(n * p)) - 1
+        return v[index]

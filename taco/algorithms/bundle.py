@@ -1,6 +1,7 @@
 """
 .. module:: bundle
-   :synopsis: Module with implementation of a bundle algorithm -- see "Proximal bundle methods for nonsmooth DC programming" by de Oliveira (2019).
+   :synopsis: Module with implementation of W. de Oliveira bundle algorithm
+
 .. moduleauthor:: Yassine LAGUEL
 """
 
@@ -74,7 +75,7 @@ class BundleAlgorithm:
         self.lst_values = np.zeros(self.nb_iterations, dtype=np.float64)
         self.lst_serious_steps = np.zeros(self.nb_iterations, dtype=np.float64)
 
-    def run(self, verbose=False):
+    def run(self, verbose=False, logs=False):
         """ Runs the optimization process
         :type verbose: bool
         :param verbose: If true, prints advance of the process in the console
@@ -86,12 +87,13 @@ class BundleAlgorithm:
 
         while self.counter < self.nb_iterations:
 
-            if verbose:
+            if logs:
                 self.lst_times[self.counter] = time.time() - start_time
                 self.lst_iterates[self.counter] = self.stability_center
                 self.lst_values[self.counter] = self.f_stability
                 if self.is_serious_step:
                     self.lst_serious_steps[self.counter] = 1.0
+            if verbose:
                 sys.stdout.write('%d / %d  iterations completed \r' % (self.counter+1, self.nb_iterations))
                 sys.stdout.flush()
 
@@ -237,7 +239,7 @@ class BundleAlgorithm:
             self.stability_center[-1] = right_quantile_stability_center
             self._update_stability_center(self.stability_center)
 
-        elif self.counter % self.restarting_period == 0 or self.mu == self.mu_high \
+        elif self.counter % self.restarting_period == 0 or self.mu >= self.mu_high \
                 or self.bundle_size >= self.max_size_bundle_set - 1:
             self.mu = self.restarting_mu
             if self.bundle_size >= self.max_size_bundle_set - 1:
@@ -249,6 +251,9 @@ class BundleAlgorithm:
             cond2 = abs(self.stability_center[-1]) < self.restarting_epsilon_eta
             if cond1 and cond2:
                 self._update_penalty_term(self.restarting_factor_pen * self.oracle.pen2)
+                if self.bundle_size >= self.max_size_bundle_set - 1:
+                    self._restart_bundle()
+                    self._update_stability_center(self.stability_center)
 
     def _restart_bundle(self):
         self.bundle_f1_infos_cc = np.zeros(self.max_size_bundle_set, dtype=np.float64)
@@ -261,7 +266,7 @@ class BundleAlgorithm:
     def _update_penalty_term(self, pen2):
 
         self.bundle_f1_infos_cc = pen2/self.oracle.pen2 * self.bundle_f1_infos_cc
-        self.bundle_g1_infos_cc = pen2 / self.oracle.pen2 * self.bundle_f1_infos_cc
+        self.bundle_g1_infos_cc = pen2 / self.oracle.pen2 * self.bundle_g1_infos_cc
         self.oracle.pen2 = pen2
         self._update_stability_center(self.stability_center)
 
