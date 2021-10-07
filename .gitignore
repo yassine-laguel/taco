@@ -6,3 +6,6 @@ demo.ipynb
 sphinx/
 *.pyc
 taco/__pycache__/
+exps/
+taco/problems/toy_problem2.py
+.DS_Store

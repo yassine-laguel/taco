@@ -1,7 +1,6 @@
 """
 .. module:: bundle
-   :synopsis: Module with implementation of W. de Oliveira bundle algorithm
-
+   :synopsis: Module with implementation of a bundle algorithm -- see "Proximal bundle methods for nonsmooth DC programming" by de Oliveira (2019).
 .. moduleauthor:: Yassine LAGUEL
 """
 
