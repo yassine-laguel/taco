@@ -568,12 +568,54 @@ def _fast_theta_prime(lmbda, v, sorted_index, p, rho):
     return res
 
 
+# @njit
+# def _quantile(p, u):
+#     v = np.sort(u)
+#     if p == 0:
+#         return v[0]
+#     else:
+#         n = len(v)
+#         index = int(np.ceil(n * p)) - 1
+#         return v[index]
+
 @njit
 def _quantile(p, u):
-    v = np.sort(u)
     if p == 0:
-        return v[0]
+        k = 1
     else:
-        n = len(v)
-        index = int(np.ceil(n * p)) - 1
-        return v[index]
+        k = np.ceil(p * len(u))
+    return _quickselect(k, u)
+
+
+@njit
+def _quickselect(k, list_of_numbers):
+    return _kthSmallest(list_of_numbers, k, 0, len(list_of_numbers) - 1)
+
+
+@njit
+def _kthSmallest(arr, k, start, end):
+
+    pivot_index = _partition(arr, start, end)
+
+    if pivot_index - start == k - 1:
+        return arr[pivot_index]
+
+    if pivot_index - start > k - 1:
+        return _kthSmallest(arr, k, start, pivot_index - 1)
+
+    return _kthSmallest(arr, k - pivot_index + start - 1, pivot_index + 1, end)
+
+
+@njit
+def _partition(arr, l, r):
+
+    pivot = arr[r]
+    i = l
+    for j in range(l, r):
+
+        if arr[j] <= pivot:
+            arr[i], arr[j] = arr[j], arr[i]
+            i += 1
+
+    arr[i], arr[r] = arr[r], arr[i]
+    return i

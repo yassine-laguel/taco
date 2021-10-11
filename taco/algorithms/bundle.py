@@ -1,6 +1,6 @@
 """
 .. module:: bundle
-   :synopsis: Module with implementation of W. de Oliveira bundle algorithm
+   :synopsis: Module with implementation of W. de Oliveira bundle algorithm -- see the paper "Proximal bundle methods for nonsmooth DC programming", Journal of Global Optimization, 2019.
 
 .. moduleauthor:: Yassine LAGUEL
 """
