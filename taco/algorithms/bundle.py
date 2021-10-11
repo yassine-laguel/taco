@@ -261,7 +261,7 @@ class BundleAlgorithm:
     def _update_penalty_term(self, pen2):
 
         self.bundle_f1_infos_cc = pen2/self.oracle.pen2 * self.bundle_f1_infos_cc
-        self.bundle_g1_infos_cc = pen2 / self.oracle.pen2 * self.bundle_f1_infos_cc
+        self.bundle_g1_infos_cc = pen2 / self.oracle.pen2 * self.bundle_g1_infos_cc
         self.oracle.pen2 = pen2
         self._update_stability_center(self.stability_center)
 
