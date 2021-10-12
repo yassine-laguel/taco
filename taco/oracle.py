@@ -290,7 +290,7 @@ class Oracle:
 #     return f, g
 
 spec = [
-    ('problem', ToyProblem2.class_type.instance_type),               # a jitclass
+    ('problem', ToyProblem.class_type.instance_type),               # a jitclass
     ('sample_size', int32),               # a simple scalar field
     ('p', float64),               # a simple scalar field
     ('pen1', float64),               # a simple scalar field

@@ -10,4 +10,4 @@ from .problems.toy_problem2 import ToyProblem2
 from .algorithms.bundle import BundleAlgorithm
 
 __all__ = ['Optimizer', 'Oracle', 'FastOracle', 'BundleAlgorithm', 'ToyProblem',
- 'ToyProblem']
+ 'ToyProblem2']

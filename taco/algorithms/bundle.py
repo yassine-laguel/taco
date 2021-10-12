@@ -55,7 +55,7 @@ class BundleAlgorithm:
         self.starting_mu = params['bund_mu_start']
         self.mu = self.starting_mu
         self.delta_tol = params['bund_delta_tol']
-        self.scaling_term = params['bund_scaling_term']
+        # self.scaling_term = params['bund_scaling_term']
         self.mu_inc = params['bund_mu_inc']
         self.mu_dec = params['bund_mu_dec']
         self.epsilon_alpha = params['bund_epsilon_alpha']
@@ -191,6 +191,7 @@ class BundleAlgorithm:
         res = np.dot(vec_gradients, vec_gradients.T)
         self.scaling_term = 1.0 / np.linalg.norm(res)
         res = self.scaling_term * res.astype(float)
+        # res = res.astype(float)
         return res
 
     # We actually solve the dual of the quadratic problem
@@ -199,7 +200,7 @@ class BundleAlgorithm:
         res = self.bundle_f1_infos_cc[:self.bundle_size] + self.bundle_f1_infos_ncc[:self.bundle_size]
         res = res + _sum_dots(self.bundle_g1_infos_cc[:self.bundle_size] + self.bundle_g1_infos_ncc[:self.bundle_size],
                               self.bundle_vectors[:self.bundle_size], c)
-        res = -1.0 * res.astype('float')
+        res = -1.0 * self.mu * res.astype('float')
         res = self.scaling_term * res
         return res
 
