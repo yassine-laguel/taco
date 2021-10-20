@@ -3,11 +3,12 @@
 
 import numpy as np
 from numba.experimental import jitclass
-from numba import int32, float64
+from numba import int32, float64, boolean
 
 
 spec = [
     ('a', float64[:]),               # a simple scalar field
+    ('constrained', boolean),
     ('data', float64[:, :]),               # an array field
     ('geo_a', float64[:, :]),          # an array field
 ]
@@ -17,6 +18,8 @@ spec = [
 class ToyProblem:
 
     def __init__(self, data):
+
+        self.constrained = False
 
         self.a = np.array([3.0, 3.0], dtype=np.float64)
         self.data = data

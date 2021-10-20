@@ -120,21 +120,48 @@ class BundleAlgorithm:
     ####################################################################################
 
     def _solve_sub_problem(self):
-
-        Q = matrix(self._bundle_gram())
-        p = matrix(self._linear_term())
-        G = matrix(-1.0 * np.eye(self.bundle_size))
-        h = matrix(np.zeros(self.bundle_size))
-        A = matrix(np.ones(self.bundle_size), (1, self.bundle_size))
-        b = matrix(1.0)
         solvers.options['show_progress'] = False
-        sol = solvers.qp(Q, p, G, h, A, b)
-        self.alpha = np.asarray(sol['x'], dtype=np.float64)[0]
+        # Solve the primal quadractic problem at each iteration of the bundle method
+        if self.oracle.problem.constrained:
+            # Objective
+            Q = matrix(self._quadratic_term_primal())
+            p = matrix(self._linear_term_primal())
+            # Inequality constraints
+            G, h = self._inequality_constraint_primal()
+            if self.oracle.problem.inequality_constrained:
+                G2 = np.hstack((self.oracle.problem.G, np.zeros((self.oracle.problem.G.shape[0], 2))))  # last two
+                # dimensions are quantile and r
+                h2 = self.oracle.problem.h
+                G = matrix(np.vstack((G, G2)).astype('float'))
+                h = matrix(np.concatenate((h, h2)).astype('float'))
+            else:
+                G = matrix(G.astype('float'))
+                h = matrix(h.astype('float'))
+            # Equality constraints
+            if self.oracle.problem.equality_constrained:
+                A = np.hstack((self.oracle.problem.A, np.zeros((self.oracle.problem.A.shape[0], 2)))).astype('float')
+                A = matrix(A)
+                b = matrix(self.oracle.problem.b.astype('float'))
+                sol = solvers.qp(Q, p, G, h, A, b)
+            else:
+                sol = solvers.qp(Q, p, G, h)
+            new_x = np.asarray(sol['x'], dtype=np.float64).T[0][:-1]
+            self.alpha = np.asarray(sol['z'], dtype=np.float64).T[0][:self.bundle_size]
 
-        p = np.zeros(len(self.x), dtype=np.float64)
-        for ii in range(len(self.alpha)):
-            p += self.alpha[ii] * (self.bundle_g1_infos_cc[ii] + self.bundle_g1_infos_ncc[ii])
-        new_x = self.stability_center + 1.0/self.mu * (self.g2_l - p)
+        else:   # When no additional constraints, solve the dual problem
+                # since dimension is upper-bounded by size of the bundle
+            Q = matrix(self._quadratic_term_dual())
+            p = matrix(self._linear_term_dual())
+            G = matrix(-1.0 * np.eye(self.bundle_size))
+            h = matrix(np.zeros(self.bundle_size))
+            A = matrix(np.ones(self.bundle_size), (1, self.bundle_size))
+            b = matrix(1.0)
+            sol = solvers.qp(Q, p, G, h, A, b)
+            self.alpha = np.asarray(sol['x'], dtype=np.float64).T[0]
+            p = np.zeros(len(self.x), dtype=np.float64)
+            for ii in range(len(self.alpha)):
+                p += self.alpha[ii] * (self.bundle_g1_infos_cc[ii] + self.bundle_g1_infos_ncc[ii])
+            new_x = self.stability_center + 1.0/self.mu * (self.g2_l - p)
         return new_x
 
     ####################################################################################
@@ -185,17 +212,37 @@ class BundleAlgorithm:
         else:
             self.mu = min(self.mu_inc * self.mu, self.mu_high)
 
+    def _quadratic_term_primal(self):  # Variable is (x,r) from Eq. 9 from De Oliveira's paper
+        res = self.mu * np.eye(len(self.x) + 1)
+        res[-1][-1] = 0.0
+        return res.astype('float')
+
+    def _linear_term_primal(self): # Variable is (x,r) from Eq. 9 from De Oliveira's paper
+        res = np.empty(len(self.x) + 1)
+        res[:-1] = - 1.0 * (self.g2_l + self.mu * self.stability_center)
+        res[-1] = 1.
+        return res.astype('float')
+
+    def _inequality_constraint_primal(self):
+        f = self.bundle_f1_infos_ncc[:self.bundle_size] + self.bundle_f1_infos_cc[:self.bundle_size]
+        g = self.bundle_g1_infos_ncc[:self.bundle_size] + self.bundle_g1_infos_cc[:self.bundle_size]
+        A = np.empty((self.bundle_size, len(self.x) + 1), dtype=np.float64)
+        A[:, :-1] = g
+        A[:, -1:] = -1.0 * np.ones((self.bundle_size, 1))
+        b = _primal_offset(f, g, self.bundle_vectors, self.bundle_size)
+        return A, b
+
     # TODO : Handle case when gram matrix is on point which zeros f1.
-    def _bundle_gram(self):
+    def _quadratic_term_dual(self):
         vec_gradients = self.bundle_g1_infos_ncc[:self.bundle_size] + self.bundle_g1_infos_cc[:self.bundle_size]
         res = np.dot(vec_gradients, vec_gradients.T)
         self.scaling_term = 1.0 / np.linalg.norm(res)
-        res = self.scaling_term * res.astype(float)
+        res = self.scaling_term * res.astype('float')
         # res = res.astype(float)
         return res
 
     # We actually solve the dual of the quadratic problem
-    def _linear_term(self):
+    def _linear_term_dual(self):
         c = self.stability_center + 1.0 / self.mu * self.g2_l
         res = self.bundle_f1_infos_cc[:self.bundle_size] + self.bundle_f1_infos_ncc[:self.bundle_size]
         res = res + _sum_dots(self.bundle_g1_infos_cc[:self.bundle_size] + self.bundle_g1_infos_ncc[:self.bundle_size],
@@ -278,4 +325,11 @@ def _sum_dots(u, v, c):
     for ii in range(len(u)):
         res[ii] = np.dot(u[ii], c - v[ii])
 
+    return res
+
+@njit
+def _primal_offset(f, g, x, size):
+    res = np.empty(size, dtype=np.float64)
+    for ii in range(size):
+        res[ii] = np.dot(g[ii], x[ii]) - f[ii]
     return res

@@ -9,6 +9,7 @@ import numpy as np
 # TODO : Put imports in init file and add licence everywhere
 from .problems.toy_problem import ToyProblem
 from .problems.toy_problem2 import ToyProblem2
+from .problems.toy_problem3 import ToyProblem3
 from numba.experimental import jitclass
 from numba import int32, float64
 from numba import njit
@@ -290,7 +291,7 @@ class Oracle:
 #     return f, g
 
 spec = [
-    ('problem', ToyProblem.class_type.instance_type),               # a jitclass
+    ('problem', ToyProblem3.class_type.instance_type),               # a jitclass
     ('sample_size', int32),               # a simple scalar field
     ('p', float64),               # a simple scalar field
     ('pen1', float64),               # a simple scalar field
