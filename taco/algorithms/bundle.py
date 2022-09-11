@@ -324,7 +324,6 @@ def _sum_dots(u, v, c):
     res = np.zeros(len(u), dtype=np.float64)
     for ii in range(len(u)):
         res[ii] = np.dot(u[ii], c - v[ii])
-
     return res
 
 @njit

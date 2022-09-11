@@ -10,6 +10,7 @@ spec = [
     ('a', float64[:]),               # a simple scalar field
     ('constrained', boolean),
     ('data', float64[:, :]),               # an array field
+    ('test_data', float64[:, :]),          # an array field
     ('geo_a', float64[:, :]),          # an array field
 ]
 
@@ -17,12 +18,13 @@ spec = [
 @jitclass(spec)
 class ToyProblem:
 
-    def __init__(self, data):
+    def __init__(self, data, test_data):
 
         self.constrained = False
 
         self.a = np.array([3.0, 3.0], dtype=np.float64)
         self.data = data
+        self.test_data = test_data
 
         r = np.sqrt(2)/2
         rot = np.array([[r, -1.0 * r], [r, r]], dtype=np.float64)
