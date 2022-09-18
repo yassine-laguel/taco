@@ -74,6 +74,8 @@ class BundleAlgorithm:
         self.lst_times = np.zeros(self.nb_iterations, dtype=np.float64)
         self.lst_values = np.zeros(self.nb_iterations, dtype=np.float64)
         self.lst_serious_steps = np.zeros(self.nb_iterations, dtype=np.float64)
+        self.lst_penalty_updates = np.zeros(self.nb_iterations, dtype=np.float64)
+        self.lst_restart_updates = np.zeros(self.nb_iterations, dtype=np.float64)
 
     def run(self, verbose=False, logs=False):
         """ Runs the optimization process
@@ -280,6 +282,7 @@ class BundleAlgorithm:
 
     def _restart_if_needed(self):
 
+        self.lst_restart_updates[self.counter] = 1.
         right_quantile_stability_center = self.oracle.right_eta(self.stability_center)
 
         if self.is_serious_step and (self.stability_center[-1] <= 0) and (right_quantile_stability_center <= 0):
@@ -312,7 +315,7 @@ class BundleAlgorithm:
         self.bundle_size = 0
 
     def _update_penalty_term(self, pen2):
-
+        self.lst_penalty_updates[self.counter] = 1.
         self.bundle_f1_infos_cc = pen2/self.oracle.pen2 * self.bundle_f1_infos_cc
         self.bundle_g1_infos_cc = pen2 / self.oracle.pen2 * self.bundle_g1_infos_cc
         self.oracle.pen2 = pen2
