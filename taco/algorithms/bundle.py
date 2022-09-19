@@ -282,10 +282,10 @@ class BundleAlgorithm:
 
     def _restart_if_needed(self):
 
-        self.lst_restart_updates[self.counter] = 1.
         right_quantile_stability_center = self.oracle.right_eta(self.stability_center)
 
         if self.is_serious_step and (self.stability_center[-1] <= 0) and (right_quantile_stability_center <= 0):
+            self.lst_restart_updates[self.counter] = 1.
             self._restart_bundle()
             self.stability_center[-1] = right_quantile_stability_center
             self._update_stability_center(self.stability_center)
@@ -294,6 +294,7 @@ class BundleAlgorithm:
                 or self.bundle_size >= self.max_size_bundle_set - 1:
             self.mu = self.restarting_mu
             if self.bundle_size >= self.max_size_bundle_set - 1:
+                self.lst_restart_updates[self.counter] = 1.
                 self._restart_bundle()
                 self._update_stability_center(self.stability_center)
 
@@ -301,6 +302,7 @@ class BundleAlgorithm:
             cond1 = abs(self.stability_center[-1] - right_quantile_stability_center) > self.restarting_penalty_slack
             cond2 = abs(self.stability_center[-1]) < self.restarting_epsilon_eta
             if cond1 and cond2:
+                self.lst_restart_updates[self.counter] = 1.
                 self._update_penalty_term(self.restarting_factor_pen * self.oracle.pen2)
                 if self.bundle_size >= self.max_size_bundle_set - 1:
                     self._restart_bundle()
