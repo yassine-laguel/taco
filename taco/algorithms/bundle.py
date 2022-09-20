@@ -11,7 +11,6 @@ import time
 import sys
 from numba import njit
 
-
 class BundleAlgorithm:
     """ Base class that combines the penalization procedure with a Bundle Method to solve
         the chance constraint problem. It is instantiated with a first-oder oracle for the DC objective and a
