@@ -54,6 +54,7 @@ class BundleAlgorithm:
         self.starting_mu = params['bund_mu_start']
         self.mu = self.starting_mu
         self.delta_tol = params['bund_delta_tol']
+        
         # self.scaling_term = params['bund_scaling_term']
         self.mu_inc = params['bund_mu_inc']
         self.mu_dec = params['bund_mu_dec']

@@ -10,6 +10,7 @@ import numpy as np
 from .problems.toy_problem import ToyProblem
 from .problems.toy_problem2 import ToyProblem2
 from .problems.toy_problem3 import ToyProblem3
+from .problems.toy_problem4 import ToyProblem4
 from numba.experimental import jitclass
 from numba import int32, float64
 from numba import njit
@@ -291,7 +292,7 @@ class Oracle:
 #     return f, g
 
 spec = [
-    ('problem', ToyProblem2.class_type.instance_type),               # a jitclass
+    ('problem', ToyProblem4.class_type.instance_type),               # a jitclass
     ('sample_size', int32),               # a simple scalar field
     ('p', float64),               # a simple scalar field
     ('pen1', float64),               # a simple scalar field
